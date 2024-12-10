@@ -110,23 +110,6 @@ namespace RegistravimoSistema.Controllers
             return Ok(user);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpPatch("UpdateUserRole/{id:guid}")]
-        public IActionResult UpdateUserRole(Guid id, [FromBody] UpdateUserRoleRequest request)
-        {
-            var user = _context.Users.Find(id);
-            if (user == null)
-                return NotFound("User not found.");
-
-            if (request.Role != "Admin" && request.Role != "User")
-                return BadRequest("Invalid role. Allowed values are 'Admin' or 'User'.");
-
-            user.Role = request.Role;
-            _context.SaveChanges();
-
-            return Ok(new { message = "User role updated successfully!" });
-        }
-
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using var hmac = new System.Security.Cryptography.HMACSHA512();
@@ -165,8 +148,4 @@ namespace RegistravimoSistema.Controllers
         }
     }
 
-    public class UpdateUserRoleRequest
-    {
-        public string Role { get; set; }
-    }
 }
