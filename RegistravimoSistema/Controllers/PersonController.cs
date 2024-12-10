@@ -77,13 +77,13 @@ namespace RegistravimoSistema.Controllers
 
             return Created("", new { PersonId = person.Id });
         }
- 
 
         [Authorize]
         [HttpGet("{id:guid}")]
-        public IActionResult GetPerson(Guid id)
+        public IActionResult GetPersonById(Guid id)
         {
             var person = _context.Persons
+                .Where(p => p.Id == id)
                 .Select(p => new
                 {
                     p.Id,
@@ -92,9 +92,15 @@ namespace RegistravimoSistema.Controllers
                     p.AsmensKodas,
                     p.TelefonoNumeris,
                     p.ElPastas,
-                    Address = _context.Addresses.FirstOrDefault(a => a.PersonId == p.Id)
+                    Address = new
+                    {
+                        p.Address.Miestas,
+                        p.Address.Gatve,
+                        p.Address.NamoNumeris,
+                        p.Address.ButoNumeris
+                    }
                 })
-                .FirstOrDefault(p => p.Id == id);
+                .FirstOrDefault();
 
             if (person == null)
                 return NotFound("Person not found.");
@@ -103,84 +109,85 @@ namespace RegistravimoSistema.Controllers
         }
 
         [Authorize]
-        [HttpPatch("Update/{field}")]
-        public IActionResult UpdatePersonalInformation([FromRoute] string field, [FromBody] UpdateFieldRequest request)
+        [HttpPut("{id:guid}")]
+        public IActionResult UpdatePerson(Guid id, [FromBody] UpdatePersonRequest request)
         {
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
-            var person = _context.Persons.FirstOrDefault(p => p.UserId == userId);
-
+            var person = _context.Persons.FirstOrDefault(p => p.Id == id);
             if (person == null)
-                return NotFound("Your person information is not available.");
+                return NotFound("Person not found.");
 
-            if (string.IsNullOrWhiteSpace(request.NewValue))
-                return BadRequest($"{field} cannot be empty or whitespace.");
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(currentUserId, out var userId) || (person.UserId != userId && !User.IsInRole("Admin")))
+                return Forbid("You do not have permission to update this person.");
 
-            switch (field.ToLower())
+            // Update person details
+            if (!string.IsNullOrWhiteSpace(request.Vardas))
+                person.Vardas = request.Vardas;
+
+            if (!string.IsNullOrWhiteSpace(request.Pavarde))
+                person.Pavarde = request.Pavarde;
+
+            if (!string.IsNullOrWhiteSpace(request.AsmensKodas))
+                person.AsmensKodas = request.AsmensKodas;
+
+            if (!string.IsNullOrWhiteSpace(request.TelefonoNumeris))
+                person.TelefonoNumeris = request.TelefonoNumeris;
+
+            if (!string.IsNullOrWhiteSpace(request.ElPastas))
+                person.ElPastas = request.ElPastas;
+
+            if (!string.IsNullOrWhiteSpace(request.ProfilioNuotrauka))
             {
-                case "vardas":
-                    person.Vardas = request.NewValue;
-                    break;
-                case "pavarde":
-                    person.Pavarde = request.NewValue;
-                    break;
-                case "asmenskodas":
-                    person.AsmensKodas = request.NewValue;
-                    break;
-                case "telefononumeris":
-                    person.TelefonoNumeris = request.NewValue;
-                    break;
-                case "elpastas":
-                    person.ElPastas = request.NewValue;
-                    break;
-                default:
-                    return BadRequest("Invalid field specified for update.");
+                try
+                {
+                    person.ProfilioNuotrauka = Convert.FromBase64String(request.ProfilioNuotrauka);
+                }
+                catch (FormatException)
+                {
+                    return BadRequest("Invalid profile picture format. Ensure it is Base64 encoded.");
+                }
             }
 
             _context.SaveChanges();
-            return NoContent();
+
+            // Update address fields
+            if (!string.IsNullOrWhiteSpace(request.Miestas))
+                UpdateAddressField(person.Id, "miestas", request.Miestas);
+
+            if (!string.IsNullOrWhiteSpace(request.Gatve))
+                UpdateAddressField(person.Id, "gatve", request.Gatve);
+
+            if (!string.IsNullOrWhiteSpace(request.NamoNumeris))
+                UpdateAddressField(person.Id, "namonumeris", request.NamoNumeris);
+
+            if (!string.IsNullOrWhiteSpace(request.ButoNumeris))
+                UpdateAddressField(person.Id, "butonumeris", request.ButoNumeris);
+
+            return Ok("Person updated successfully!");
         }
 
-        [Authorize]
-        [HttpPatch("UpdateAddress/{field}")]
-        public IActionResult UpdateAddressInformation([FromRoute] string field, [FromBody] UpdateFieldRequest request)
+        private void UpdateAddressField(Guid personId, string field, string value)
         {
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
-            var person = _context.Persons.FirstOrDefault(p => p.UserId == userId);
-
-            if (person == null)
-                return NotFound("Your person information is not available.");
-
-            var address = _context.Addresses.FirstOrDefault(a => a.PersonId == person.Id);
-            if (address == null)
-                return NotFound("Your address information is not available.");
-
-            if (string.IsNullOrWhiteSpace(request.NewValue))
-                return BadRequest($"{field} cannot be empty or whitespace.");
-
-            switch (field.ToLower())
+            var address = _context.Addresses.FirstOrDefault(a => a.PersonId == personId);
+            if (address != null)
             {
-                case "miestas":
-                    address.Miestas = request.NewValue;
-                    break;
-                case "gatve":
-                    address.Gatve = request.NewValue;
-                    break;
-                case "namonumeris":
-                    address.NamoNumeris = request.NewValue;
-                    break;
-                case "butonumeris":
-                    address.ButoNumeris = request.NewValue;
-                    break;
-                default:
-                    return BadRequest("Invalid field specified for update.");
+                switch (field.ToLower())
+                {
+                    case "miestas":
+                        address.Miestas = value;
+                        break;
+                    case "gatve":
+                        address.Gatve = value;
+                        break;
+                    case "namonumeris":
+                        address.NamoNumeris = value;
+                        break;
+                    case "butonumeris":
+                        address.ButoNumeris = value;
+                        break;
+                }
+                _context.SaveChanges();
             }
-
-            _context.SaveChanges();
-            return NoContent();
         }
     }
-
-    
-
-    
 }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Person</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Update Person</h1>
+        <button id="logout-btn">Logout</button>
+    </header>
+    <main>
+        <section id="update-section">
+            <input type="text" id="update-id" placeholder="Person ID">
+            <button id="fetch-person-btn">Fetch Person</button>
+            <div id="update-form" class="hidden">
+                <input type="text" id="update-vardas" placeholder="Vardas">
+                <input type="text" id="update-pavarde" placeholder="Pavarde">
+                <input type="text" id="update-asmens-kodas" placeholder="Asmens Kodas">
+                <input type="text" id="update-telefono-numeris" placeholder="Telefono Numeris">
+                <input type="email" id="update-el-pastas" placeholder="El. Paštas">
+                <input type="text" id="update-miestas" placeholder="Miestas">
+                <input type="text" id="update-gatve" placeholder="Gatvė">
+                <input type="text" id="update-namo-numeris" placeholder="Namo Numeris">
+                <input type="text" id="update-buto-numeris" placeholder="Buto Numeris">
+                <label for="update-profile-picture">Profile Picture:</label>
+                <input type="file" id="update-profile-picture" accept="image/*">
+                <button id="save-updates-btn">Save Updates</button>
+                <p id="update-message"></p>
+            </div>
+        </section>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
