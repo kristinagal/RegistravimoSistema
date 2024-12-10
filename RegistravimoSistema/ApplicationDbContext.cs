@@ -26,7 +26,7 @@ namespace RegistravimoSistema
         {
             base.OnModelCreating(modelBuilder);
 
-            // User Configuration
+            // User 
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(u => u.Id);
@@ -44,7 +44,7 @@ namespace RegistravimoSistema
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Person Configuration
+            // Person 
             modelBuilder.Entity<Person>(entity =>
             {
                 entity.HasKey(p => p.Id);
@@ -81,7 +81,7 @@ namespace RegistravimoSistema
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Address Configuration
+            // Address 
             modelBuilder.Entity<Address>(entity =>
             {
                 entity.HasKey(a => a.Id);

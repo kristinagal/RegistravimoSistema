@@ -50,7 +50,7 @@ namespace RegistravimoSistema.Controllers
             var person = new Person
             {
                 Id = Guid.NewGuid(),
-                UserId = user.Id, // Associate with the current user
+                UserId = user.Id,
                 Vardas = request.Vardas,
                 Pavarde = request.Pavarde,
                 AsmensKodas = request.AsmensKodas,
