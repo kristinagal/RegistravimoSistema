@@ -30,6 +30,8 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     }
 });
 
+// Signup
+
 // Create Person
 document.getElementById("create-person-btn").addEventListener("click", async () => {
     const data = {
@@ -62,29 +64,6 @@ document.getElementById("create-person-btn").addEventListener("click", async () 
         }
     } catch (error) {
         document.getElementById("person-message").textContent = "Error occurred during person creation.";
-    }
-});
-
-// Retrieve Person
-document.getElementById("retrieve-btn").addEventListener("click", async () => {
-    const id = document.getElementById("retrieve-id").value;
-
-    try {
-        const response = await fetch(`${baseUrl}/Person/${id}`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        const result = await response.json();
-        if (response.ok) {
-            document.getElementById("retrieve-result").textContent = JSON.stringify(result, null, 2);
-        } else {
-            document.getElementById("retrieve-result").textContent = result.message || "Failed to retrieve person.";
-        }
-    } catch (error) {
-        document.getElementById("retrieve-result").textContent = "Error occurred while retrieving person.";
     }
 });
 
