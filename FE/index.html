@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registravimo Sistema</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Registravimo Sistema</h1>
+    </header>
+    <main>
+        <section id="login-section">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button id="login-btn">Login</button>
+            <p id="login-message"></p>
+        </section>
+
+        <section id="person-section" class="hidden">
+            <h2>Create or Update Person</h2>
+            <input type="text" id="vardas" placeholder="Vardas">
+            <input type="text" id="pavarde" placeholder="Pavarde">
+            <input type="text" id="asmens-kodas" placeholder="Asmens Kodas">
+            <input type="text" id="telefono-numeris" placeholder="Telefono Numeris">
+            <input type="email" id="el-pastas" placeholder="El. Paštas">
+            <input type="text" id="miestas" placeholder="Miestas">
+            <input type="text" id="gatve" placeholder="Gatvė">
+            <input type="text" id="namo-numeris" placeholder="Namo Numeris">
+            <input type="text" id="buto-numeris" placeholder="Buto Numeris">
+            <label for="profile-picture">Profile Picture:</label>
+            <input type="file" id="profile-picture" accept="image/*">
+            <button id="create-person-btn">Create Person</button>
+            <p id="person-message"></p>
+        </section>        
+
+        <section id="retrieve-section" class="hidden">
+            <h2>Retrieve Person</h2>
+            <input type="text" id="retrieve-id" placeholder="Person ID">
+            <button id="retrieve-btn">Retrieve</button>
+            <pre id="retrieve-result"></pre>
+        </section>
+
+        <section id="delete-section" class="hidden">
+            <h2>Delete User (Admin Only)</h2>
+            <input type="text" id="delete-id" placeholder="User ID">
+            <button id="delete-btn">Delete</button>
+            <p id="delete-message"></p>
+        </section>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
