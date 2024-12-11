@@ -23,7 +23,7 @@ namespace RegistravimoSistema.Controllers
         }
 
         [HttpPost("SignUp")]
-        public IActionResult SignUp([FromBody] UserSignUpRequest request)
+        public IActionResult SignUp([FromBody] UserAuthRequest request)
         {
             if (_context.Users.Any(u => u.Username == request.Username))
                 return BadRequest("Username already exists.");
@@ -45,7 +45,7 @@ namespace RegistravimoSistema.Controllers
         }
 
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] UserLoginRequest request)
+        public IActionResult Login([FromBody] UserAuthRequest request)
         {
             var user = _context.Users.SingleOrDefault(u => u.Username == request.Username);
             if (user == null)

@@ -1,16 +1,35 @@
-﻿namespace RegistravimoSistema.DTOs
+﻿using RegistravimoSistema.Validations;
+
+namespace RegistravimoSistema.DTOs
 {
     public class UpdatePersonRequest
     {
-        public string Vardas { get; set; }
-        public string Pavarde { get; set; }
-        public string AsmensKodas { get; set; }
-        public string TelefonoNumeris { get; set; }
-        public string ElPastas { get; set; }
-        public string Miestas { get; set; }
-        public string Gatve { get; set; }
-        public string NamoNumeris { get; set; }
-        public string ButoNumeris { get; set; }
+        [TextLengthValidator(2, 50)]
+        public string Vardas { get; set; } = string.Empty;
+
+        [TextLengthValidator(2, 50)]
+        public string Pavarde { get; set; } = string.Empty;
+
+        [AsmensKodasValidator]
+        public string AsmensKodas { get; set; } = string.Empty;
+
+        [TelefonoNumerisValidator]
+        public string TelefonoNumeris { get; set; } = string.Empty;
+
+        [EmailValidator]
+        public string ElPastas { get; set; } = string.Empty;
+
+        [TextLengthValidator(1, 100)]
+        public string Miestas { get; set; } = string.Empty;
+
+        [TextLengthValidator(1, 100)]
+        public string Gatve { get; set; } = string.Empty;
+
+        [TextLengthValidator(1, 10)]
+        public string NamoNumeris { get; set; } = string.Empty;
+
+        public string? ButoNumeris { get; set; } // Nullable
+
         public string? ProfilioNuotrauka { get; set; } // Base64 string
     }
 
