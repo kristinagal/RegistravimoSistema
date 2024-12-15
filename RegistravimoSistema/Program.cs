@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using RegistravimoSistema.Services;
+using RegistravimoSistema.Mappers;
+using RegistravimoSistema.Repositories;
 
 namespace RegistravimoSistema
 {
@@ -9,16 +12,19 @@ namespace RegistravimoSistema
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container
-
             // Configure DbContext with SQL Server
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Add controllers
+            // Repositories
+            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<PersonRepository>();
+            builder.Services.AddScoped<AddressRepository>();
+
+            // Controllers
             builder.Services.AddControllers();
 
-            // Add authentication using JWT
+            // Authentication using JWT
             builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer(options =>
                 {
@@ -37,6 +43,15 @@ namespace RegistravimoSistema
 
             // Add authorization
             builder.Services.AddAuthorization();
+
+            // Register services
+            builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<IPersonService, PersonService>();
+
+            // Register mappers
+            builder.Services.AddScoped<IAccountMapper, AccountMapper>();
+            builder.Services.AddScoped<IPersonMapper, PersonMapper>();
 
             // Configure Swagger
             builder.Services.AddEndpointsApiExplorer();

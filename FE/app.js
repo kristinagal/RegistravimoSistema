@@ -14,23 +14,21 @@ function renderMenu() {
             ${role === "Admin" ? `<button onclick="window.location.href='delete-user.html'">Delete User</button>` : ""}
             <button id="logout-btn">Logout</button>
         `;
-
-        // Bind logout functionality
         document.getElementById("logout-btn").addEventListener("click", () => {
             localStorage.removeItem("token");
             localStorage.removeItem("role");
             alert("You have been logged out.");
-            window.location.href = "index.html"; // Redirect to login/signup page
+            window.location.href = "index.html";
         });
     }
 }
 
-// Restrict access to certain pages based on authentication and role
-const restrictedPages = ["delete-user.html", "create-person.html", "retrieve-person.html", "menu.html"];
+// Restrict access to pages
+const restrictedPages = ["delete-user.html", "create-person.html", "retrieve-person.html", "update-person.html", "menu.html"];
 const publicPages = ["login.html", "signup.html", "index.html"];
 const currentPage = window.location.pathname.split("/").pop();
 
-if (!publicPages.includes(currentPage) && restrictedPages.some(page => currentPage.includes(page))) {
+if (!publicPages.includes(currentPage) && restrictedPages.includes(currentPage)) {
     if (!token) {
         alert("Please log in first.");
         window.location.href = "login.html";
@@ -40,9 +38,16 @@ if (!publicPages.includes(currentPage) && restrictedPages.some(page => currentPa
     }
 }
 
-// Render the menu dynamically if logged in
-if (token) {
-    renderMenu();
+if (token) renderMenu();
+
+// Helper Function: Convert Image to Base64
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
 }
 
 // Login Functionality
@@ -60,7 +65,7 @@ if (currentPage === "login.html") {
 
             const result = await response.json();
             if (response.ok) {
-                const payload = JSON.parse(atob(result.token.split(".")[1])); // Decode JWT
+                const payload = JSON.parse(atob(result.token.split(".")[1]));
                 localStorage.setItem("token", result.token);
                 localStorage.setItem("role", payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]);
 
@@ -69,7 +74,7 @@ if (currentPage === "login.html") {
             } else {
                 document.getElementById("login-message").textContent = result.message || "Login failed.";
             }
-        } catch (error) {
+        } catch {
             document.getElementById("login-message").textContent = "Error occurred during login.";
         }
     });
@@ -95,8 +100,43 @@ if (currentPage === "signup.html") {
             } else {
                 document.getElementById("signup-message").textContent = result.message || "Signup failed.";
             }
-        } catch (error) {
+        } catch {
             document.getElementById("signup-message").textContent = "Error occurred during signup.";
+        }
+    });
+}
+
+// Retrieve Person Functionality
+if (document.getElementById("retrieve-btn")) {
+    document.getElementById("retrieve-btn").addEventListener("click", async () => {
+        const id = document.getElementById("retrieve-id").value;
+
+        try {
+            const response = await fetch(`${baseUrl}/Person/${id}`, {
+                method: "GET",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+
+                // Display profile picture if exists
+                let profilePic = "";
+                if (result.profilioNuotrauka) {
+                    profilePic = `<img src="data:image/png;base64,${result.profilioNuotrauka}" 
+                                  alt="Profile Picture" style="max-width: 200px;" />`;
+                }
+
+                document.getElementById("retrieve-result").innerHTML = `
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                    ${profilePic}
+                `;
+            } else {
+                const result = await response.json();
+                document.getElementById("retrieve-result").textContent = result.message || "Failed to retrieve person.";
+            }
+        } catch {
+            document.getElementById("retrieve-result").textContent = "Error occurred during retrieval.";
         }
     });
 }
@@ -107,14 +147,8 @@ if (document.getElementById("create-person-btn")) {
         const fileInput = document.getElementById("profile-picture");
         let profilePicture = null;
 
-        // If a file is selected, convert it to Base64
         if (fileInput.files.length > 0) {
-            try {
-                profilePicture = await getBase64(fileInput.files[0]);
-            } catch (error) {
-                document.getElementById("person-message").textContent = "Failed to process profile picture.";
-                return;
-            }
+            profilePicture = await getBase64(fileInput.files[0]);
         }
 
         const data = {
@@ -135,133 +169,24 @@ if (document.getElementById("create-person-btn")) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify(data)
             });
 
             if (response.ok) {
-                document.getElementById("person-message").textContent = "Person created successfully!";
+                alert("Person created successfully!");
             } else {
                 const result = await response.json();
                 document.getElementById("person-message").textContent = result.message || "Failed to create person.";
             }
-        } catch (error) {
+        } catch {
             document.getElementById("person-message").textContent = "Error occurred during person creation.";
         }
     });
 }
 
-// Update Person Functionality
-document.getElementById("retrieve-update-btn").addEventListener("click", async () => {
-    const personId = document.getElementById("update-id").value;
-
-    if (!personId) {
-        document.getElementById("update-message").textContent = "Please enter a valid Person ID.";
-        return;
-    }
-
-    try {
-        // Fetch existing person data
-        const response = await fetch(`${baseUrl}/Person/${personId}`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const person = await response.json();
-
-            // Populate fields with existing data
-            document.getElementById("update-vardas").value = person.vardas;
-            document.getElementById("update-pavarde").value = person.pavarde;
-            document.getElementById("update-asmens-kodas").value = person.asmensKodas;
-            document.getElementById("update-telefono-numeris").value = person.telefonoNumeris;
-            document.getElementById("update-el-pastas").value = person.elPastas;
-            document.getElementById("update-miestas").value = person.address.miestas;
-            document.getElementById("update-gatve").value = person.address.gatve;
-            document.getElementById("update-namo-numeris").value = person.address.namoNumeris;
-            document.getElementById("update-buto-numeris").value = person.address.butoNumeris;
-
-            document.getElementById("update-message").textContent = "Person data loaded successfully!";
-        } else {
-            const result = await response.json();
-            document.getElementById("update-message").textContent = result.message || "Failed to load person data.";
-        }
-    } catch (error) {
-        document.getElementById("update-message").textContent = "Error occurred while retrieving person data.";
-    }
-});
-
-document.getElementById("update-person-btn").addEventListener("click", async () => {
-    const personId = document.getElementById("update-id").value;
-
-    if (!personId) {
-        document.getElementById("update-message").textContent = "Please enter a valid Person ID.";
-        return;
-    }
-
-    const data = {
-        vardas: document.getElementById("update-vardas").value,
-        pavarde: document.getElementById("update-pavarde").value,
-        asmensKodas: document.getElementById("update-asmens-kodas").value,
-        telefonoNumeris: document.getElementById("update-telefono-numeris").value,
-        elPastas: document.getElementById("update-el-pastas").value,
-        miestas: document.getElementById("update-miestas").value,
-        gatve: document.getElementById("update-gatve").value,
-        namoNumeris: document.getElementById("update-namo-numeris").value,
-        butoNumeris: document.getElementById("update-buto-numeris").value,
-        profilioNuotrauka: null // Add logic for profile picture if needed
-    };
-
-    try {
-        // Update person data
-        const response = await fetch(`${baseUrl}/Person/${personId}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-            document.getElementById("update-message").textContent = "Person updated successfully!";
-        } else {
-            const result = await response.json();
-            document.getElementById("update-message").textContent = result.message || "Failed to update person.";
-        }
-    } catch (error) {
-        document.getElementById("update-message").textContent = "Error occurred while updating person.";
-    }
-});
-
-// Retrieve Person by ID Functionality
-if (document.getElementById("retrieve-btn")) {
-    document.getElementById("retrieve-btn").addEventListener("click", async () => {
-        const id = document.getElementById("retrieve-id").value;
-
-        try {
-            const response = await fetch(`${baseUrl}/Person/${id}`, {
-                method: "GET",
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                document.getElementById("retrieve-result").textContent = JSON.stringify(result, null, 2);
-            } else {
-                const result = await response.json();
-                document.getElementById("retrieve-result").textContent = result.message || "Failed to retrieve person.";
-            }
-        } catch (error) {
-            document.getElementById("retrieve-result").textContent = "Error occurred during retrieval.";
-        }
-    });
-}
-
-// Delete User (Admin Only)
+// Delete User Functionality (Admin Only)
 if (document.getElementById("delete-btn")) {
     document.getElementById("delete-btn").addEventListener("click", async () => {
         const id = document.getElementById("delete-id").value;
@@ -269,27 +194,17 @@ if (document.getElementById("delete-btn")) {
         try {
             const response = await fetch(`${baseUrl}/Accounts/DeleteUser/${id}`, {
                 method: "DELETE",
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (response.ok) {
-                document.getElementById("delete-message").textContent = "User deleted successfully!";
+                alert("User deleted successfully!");
             } else {
                 const result = await response.json();
                 document.getElementById("delete-message").textContent = result.message || "Failed to delete user.";
             }
-        } catch (error) {
+        } catch {
             document.getElementById("delete-message").textContent = "Error occurred while deleting user.";
         }
-    });
-}
-
-// Helper Function: Convert Image to Base64
-function getBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]); // Remove metadata
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file);
     });
 }

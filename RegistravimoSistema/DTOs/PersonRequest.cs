@@ -2,7 +2,7 @@
 
 namespace RegistravimoSistema.DTOs
 {
-    public class CreatePersonRequest
+    public class PersonRequest
     {
         [TextLengthValidator(2, 50)]
         public string Vardas { get; set; } = string.Empty;
@@ -32,5 +32,4 @@ namespace RegistravimoSistema.DTOs
 
         public string? ButoNumeris { get; set; } // Nullable
     }
-
 }

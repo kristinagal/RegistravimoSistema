@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RegistravimoSistema.Entities
+﻿namespace RegistravimoSistema.Entities
 {
     public class User
     {

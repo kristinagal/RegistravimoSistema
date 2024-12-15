@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RegistravimoSistema.Entities;
 using RegistravimoSistema.DTOs;
+using RegistravimoSistema.Repositories;
+using RegistravimoSistema.Services;
 using System.Security.Claims;
 
 namespace RegistravimoSistema.Controllers
@@ -10,109 +11,66 @@ namespace RegistravimoSistema.Controllers
     [Route("api/[controller]")]
     public class PersonController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPersonService _personService;
+        private readonly IPersonRepository _personRepository;
 
-        public PersonController(ApplicationDbContext context)
+        public PersonController(IPersonService personService, IPersonRepository personRepository)
         {
-            _context = context;
+            _personService = personService;
+            _personRepository = personRepository;
         }
 
         [HttpPost]
         [Authorize]
-        public IActionResult CreatePerson([FromBody] CreatePersonRequest request)
+        public async Task<IActionResult> CreatePerson([FromBody] PersonRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Vardas) || string.IsNullOrWhiteSpace(request.Pavarde))
-                return BadRequest("Vardas and Pavarde are required.");
-
             var currentUserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(currentUserId) || !Guid.TryParse(currentUserId, out var userId))
                 return Unauthorized("User must be logged in.");
 
-            var user = _context.Users.Find(userId);
-            if (user == null)
-                return Unauthorized("Invalid user.");
+            await _personService.CreatePersonAsync(request, userId);
 
-            byte[]? profilePictureBytes = null;
-
-            if (!string.IsNullOrWhiteSpace(request.ProfilioNuotrauka))
-            {
-                try
-                {
-                    profilePictureBytes = Convert.FromBase64String(request.ProfilioNuotrauka);
-                }
-                catch (FormatException)
-                {
-                    return BadRequest("Invalid profile picture format. Ensure it is Base64 encoded.");
-                }
-            }
-
-            var person = new Person
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                Vardas = request.Vardas,
-                Pavarde = request.Pavarde,
-                AsmensKodas = request.AsmensKodas,
-                TelefonoNumeris = request.TelefonoNumeris,
-                ElPastas = request.ElPastas,
-                ProfilioNuotrauka = profilePictureBytes ?? Array.Empty<byte>()
-            };
-
-            _context.Persons.Add(person);
-            _context.SaveChanges();
-
-            var address = new Address
-            {
-                Id = Guid.NewGuid(),
-                PersonId = person.Id,
-                Miestas = request.Miestas,
-                Gatve = request.Gatve,
-                NamoNumeris = request.NamoNumeris,
-                ButoNumeris = request.ButoNumeris
-            };
-
-            _context.Addresses.Add(address);
-            _context.SaveChanges();
-
-            return Created("", new { PersonId = person.Id });
+            return Created("", new { message = "Person created successfully!" });
         }
 
         [Authorize]
         [HttpGet("{id:guid}")]
-        public IActionResult GetPersonById(Guid id)
+        public async Task<IActionResult> GetPersonById(Guid id)
         {
-            var person = _context.Persons
-                .Where(p => p.Id == id)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Vardas,
-                    p.Pavarde,
-                    p.AsmensKodas,
-                    p.TelefonoNumeris,
-                    p.ElPastas,
-                    Address = new
-                    {
-                        p.Address.Miestas,
-                        p.Address.Gatve,
-                        p.Address.NamoNumeris,
-                        p.Address.ButoNumeris
-                    }
-                })
-                .FirstOrDefault();
+            var person = await _personRepository.GetByIdAsync(id);
 
             if (person == null)
                 return NotFound("Person not found.");
 
-            return Ok(person);
+            var response = new PersonResponse
+            {
+                Id = person.Id,
+                Vardas = person.Vardas,
+                Pavarde = person.Pavarde,
+                AsmensKodas = person.AsmensKodas,
+                TelefonoNumeris = person.TelefonoNumeris,
+                ElPastas = person.ElPastas,
+                ProfilioNuotrauka = person.ProfilioNuotrauka != null
+                    ? Convert.ToBase64String(person.ProfilioNuotrauka)
+                    : null,
+                Address = new AddressResponse
+                {
+                    Miestas = person.Address.Miestas,
+                    Gatve = person.Address.Gatve,
+                    NamoNumeris = person.Address.NamoNumeris,
+                    ButoNumeris = person.Address.ButoNumeris
+                }
+            };
+
+            return Ok(response);
         }
 
         [Authorize]
         [HttpPut("{id:guid}")]
-        public IActionResult UpdatePerson(Guid id, [FromBody] UpdatePersonRequest request)
+        public async Task<IActionResult> UpdatePerson(Guid id, [FromBody] PersonRequest request)
         {
-            var person = _context.Persons.FirstOrDefault(p => p.Id == id);
+            var person = await _personRepository.GetByIdAsync(id);
             if (person == null)
                 return NotFound("Person not found.");
 
@@ -148,46 +106,9 @@ namespace RegistravimoSistema.Controllers
                 }
             }
 
-            _context.SaveChanges();
-
-            // Update address fields
-            if (!string.IsNullOrWhiteSpace(request.Miestas))
-                UpdateAddressField(person.Id, "miestas", request.Miestas);
-
-            if (!string.IsNullOrWhiteSpace(request.Gatve))
-                UpdateAddressField(person.Id, "gatve", request.Gatve);
-
-            if (!string.IsNullOrWhiteSpace(request.NamoNumeris))
-                UpdateAddressField(person.Id, "namonumeris", request.NamoNumeris);
-
-            if (!string.IsNullOrWhiteSpace(request.ButoNumeris))
-                UpdateAddressField(person.Id, "butonumeris", request.ButoNumeris);
+            await _personRepository.UpdateAsync(person);
 
             return Ok("Person updated successfully!");
-        }
-
-        private void UpdateAddressField(Guid personId, string field, string value)
-        {
-            var address = _context.Addresses.FirstOrDefault(a => a.PersonId == personId);
-            if (address != null)
-            {
-                switch (field.ToLower())
-                {
-                    case "miestas":
-                        address.Miestas = value;
-                        break;
-                    case "gatve":
-                        address.Gatve = value;
-                        break;
-                    case "namonumeris":
-                        address.NamoNumeris = value;
-                        break;
-                    case "butonumeris":
-                        address.ButoNumeris = value;
-                        break;
-                }
-                _context.SaveChanges();
-            }
         }
     }
 }

@@ -9,7 +9,7 @@
 <body>
     <header>
         <h1>Update Person</h1>
-        <button id="logout-btn">Logout</button>
+        <div id="menu"></div>
     </header>
     <main>
         <section id="update-section">
@@ -25,8 +25,10 @@
                 <input type="text" id="update-gatve" placeholder="Gatvė">
                 <input type="text" id="update-namo-numeris" placeholder="Namo Numeris">
                 <input type="text" id="update-buto-numeris" placeholder="Buto Numeris">
+                
                 <label for="update-profile-picture">Profile Picture:</label>
                 <input type="file" id="update-profile-picture" accept="image/*">
+                <img id="update-profile-preview" class="hidden" alt="Profile Picture Preview" style="max-width: 200px; max-height: 200px;">
                 <button id="save-updates-btn">Save Updates</button>
                 <p id="update-message"></p>
             </div>

@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using RegistravimoSistema.Entities;
 using RegistravimoSistema.DTOs;
+using RegistravimoSistema.Mappers;
+using RegistravimoSistema.Repositories;
+using RegistravimoSistema.Services;
 
 namespace RegistravimoSistema.Controllers
 {
@@ -13,139 +11,66 @@ namespace RegistravimoSistema.Controllers
     [Route("api/[controller]")]
     public class AccountsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IUserRepository _userRepository;
+        private readonly IJwtService _jwtService;
+        private readonly IAccountService _accountService;
+        private readonly IAccountMapper _accountMapper;
 
-        public AccountsController(ApplicationDbContext context, IConfiguration configuration)
+        public AccountsController(
+            IUserRepository userRepository,
+            IJwtService jwtService,
+            IAccountService accountService,
+            IAccountMapper accountMapper)
         {
-            _context = context;
-            _configuration = configuration;
+            _userRepository = userRepository;
+            _jwtService = jwtService;
+            _accountService = accountService;
+            _accountMapper = accountMapper;
         }
 
         [HttpPost("SignUp")]
-        public IActionResult SignUp([FromBody] UserAuthRequest request)
+        public async Task<IActionResult> SignUp([FromBody] UserAuthRequest request)
         {
-            if (_context.Users.Any(u => u.Username == request.Username))
+            var existingUser = await _userRepository.GetByUsernameAsync(request.Username);
+            if (existingUser != null)
                 return BadRequest("Username already exists.");
 
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            _accountService.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
-            var user = new User
-            {
-                Username = request.Username,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt,
-                Role = "User" // default
-            };
+            var user = _accountMapper.MapFromDto(request);
+            user.PasswordHash = passwordHash;
+            user.PasswordSalt = passwordSalt;
+            user.Role = "User"; // default
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _userRepository.AddAsync(user);
 
             return Created("", new { message = "User registered successfully!" });
         }
 
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] UserAuthRequest request)
+        public async Task<IActionResult> Login([FromBody] UserAuthRequest request)
         {
-            var user = _context.Users.SingleOrDefault(u => u.Username == request.Username);
+            var user = await _userRepository.GetByUsernameAsync(request.Username);
             if (user == null)
                 return Unauthorized("User not found.");
 
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            if (!_accountService.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
                 return Unauthorized("Incorrect password.");
 
-            var token = GenerateJwtToken(user);
+            var token = _jwtService.GenerateJwtToken(user);
             return Ok(new { Token = token });
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteUser/{id:guid}")]
-        public IActionResult DeleteUser(Guid id)
+        public async Task<IActionResult> DeleteUser(Guid id)
         {
-            var user = _context.Users.Find(id);
+            var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
                 return NotFound("User not found.");
 
-            _context.Users.Remove(user);
-            _context.SaveChanges();
+            await _userRepository.DeleteAsync(id);
             return NoContent();
         }
-
-        [Authorize(Roles = "Admin")]
-        [HttpGet("GetAllUsers")]
-        public IActionResult GetAllUsers()
-        {
-            var users = _context.Users
-                .Select(u => new { u.Id, u.Username, u.Role })
-                .ToList();
-
-            return Ok(users);
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpGet("GetUser/{id:guid}")]
-        public IActionResult GetUser(Guid id)
-        {
-            var user = _context.Users
-                .Select(u => new
-                {
-                    u.Id,
-                    u.Username,
-                    u.Role,
-                    Persons = u.Persons.Select(p => new
-                    {
-                        p.Vardas,
-                        p.Pavarde,
-                        p.AsmensKodas,
-                        p.TelefonoNumeris,
-                        p.ElPastas,
-                        p.Address
-                    })
-                })
-                .SingleOrDefault(u => u.Id == id);
-
-            if (user == null)
-                return NotFound("User not found.");
-
-            return Ok(user);
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using var hmac = new System.Security.Cryptography.HMACSHA512();
-            passwordSalt = hmac.Key;
-            passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        }
-
-        private bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
-        {
-            using var hmac = new System.Security.Cryptography.HMACSHA512(storedSalt);
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return computedHash.SequenceEqual(storedHash);
-        }
-
-        private string GenerateJwtToken(User user)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(7),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
     }
-
 }
