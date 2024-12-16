@@ -1,23 +1,25 @@
-﻿namespace RegistravimoSistema.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RegistravimoSistema.Entities
 {
     public class Person
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Vardas { get; set; } = string.Empty;
-        public string Pavarde { get; set; } = string.Empty;
+        [Required] public string Vardas { get; set; } = string.Empty;
+        [Required] public string Pavarde { get; set; } = string.Empty;
 
-        public string AsmensKodas { get; set; } = string.Empty;
-        public string TelefonoNumeris { get; set; } = string.Empty;
-        public string ElPastas { get; set; } = string.Empty;
+        [Required] public string AsmensKodas { get; set; } = string.Empty;
+        [Required] public string TelefonoNumeris { get; set; } = string.Empty;
+        [Required] public string ElPastas { get; set; } = string.Empty;
 
-        public byte[] ProfilioNuotrauka { get; set; } = Array.Empty<byte>();
+        [Required] public byte[] ProfilioNuotrauka { get; set; } = Array.Empty<byte>();
 
         // Navigation Property
-        public Guid UserId { get; set; }
-        public User User { get; set; } = null!;
+        [Required] public Guid UserId { get; set; }
+        [Required] public User User { get; set; } = null!;
 
         // One-to-One
-        public Address Address { get; set; } = null!;
+        [Required] public Address Address { get; set; } = null!;
     }
 
 }

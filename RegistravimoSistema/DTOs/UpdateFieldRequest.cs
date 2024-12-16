@@ -60,6 +60,6 @@ namespace RegistravimoSistema.DTOs
     public class UpdateButoNumerisRequest
     {
         [TextLengthValidator(1, 10)]
-        public string? ButoNumeris { get; set; }
+        public string ButoNumeris { get; set; } = string.Empty;
     }
 }

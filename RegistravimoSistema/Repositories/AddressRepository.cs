@@ -7,7 +7,6 @@ namespace RegistravimoSistema.Repositories
     {
         Task AddAsync(Address address);
         Task UpdateAsync(Address address);
-
     }
 
     public class AddressRepository : IAddressRepository
@@ -21,15 +20,24 @@ namespace RegistravimoSistema.Repositories
 
         public async Task AddAsync(Address address)
         {
+            if (address == null)
+            {
+                throw new ArgumentNullException(nameof(address), "Address cannot be null.");
+            }
+
             await _context.Addresses.AddAsync(address);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Address address)
         {
+            if (address == null)
+            {
+                throw new ArgumentNullException(nameof(address), "Address cannot be null.");
+            }
+
             _context.Addresses.Update(address);
             await _context.SaveChangesAsync();
         }
-
     }
 }

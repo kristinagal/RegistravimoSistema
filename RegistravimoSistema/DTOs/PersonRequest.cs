@@ -30,5 +30,6 @@ public class PersonRequest
     [Required, TextLengthValidator(1, 10)]
     public string NamoNumeris { get; set; } = string.Empty;
 
-    public string? ButoNumeris { get; set; } // Nullable
+    [Required, TextLengthValidator(1, 10)]
+    public string ButoNumeris { get; set; } = string.Empty;
 }

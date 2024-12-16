@@ -10,7 +10,6 @@ namespace RegistravimoSistema.Repositories
         Task UpdateAsync(Person person);
         Task<Person?> GetByUserIdAsync(Guid userId);
         Task DeleteAsync(Guid personId);
-
     }
 
     public class PersonRepository : IPersonRepository
@@ -19,7 +18,15 @@ namespace RegistravimoSistema.Repositories
 
         public PersonRepository(ApplicationDbContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        public async Task AddAsync(Person person)
+        {
+            if (person == null) throw new ArgumentNullException(nameof(person), "Person cannot be null.");
+
+            await _context.Persons.AddAsync(person);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Person?> GetByIdAsync(Guid id)
@@ -27,14 +34,10 @@ namespace RegistravimoSistema.Repositories
             return await _context.Persons.Include(p => p.Address).FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task AddAsync(Person person)
-        {
-            await _context.Persons.AddAsync(person);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task UpdateAsync(Person person)
         {
+            if (person == null) throw new ArgumentNullException(nameof(person), "Person cannot be null.");
+
             _context.Persons.Update(person);
             await _context.SaveChangesAsync();
         }
@@ -48,12 +51,10 @@ namespace RegistravimoSistema.Repositories
         public async Task DeleteAsync(Guid personId)
         {
             var person = await _context.Persons.FindAsync(personId);
-            if (person != null)
-            {
-                _context.Persons.Remove(person);
-                await _context.SaveChangesAsync();
-            }
-        }
+            if (person == null) throw new ArgumentException($"Person with ID {personId} not found.");
 
+            _context.Persons.Remove(person);
+            await _context.SaveChangesAsync();
+        }
     }
 }

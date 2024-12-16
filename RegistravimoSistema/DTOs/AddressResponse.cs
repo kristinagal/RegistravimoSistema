@@ -5,6 +5,6 @@
         public string Miestas { get; set; } = string.Empty;
         public string Gatve { get; set; } = string.Empty;
         public string NamoNumeris { get; set; } = string.Empty;
-        public string? ButoNumeris { get; set; }
+        public string ButoNumeris { get; set; } = string.Empty;
     }
 }
