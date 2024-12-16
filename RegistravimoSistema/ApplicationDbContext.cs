@@ -21,7 +21,6 @@ namespace RegistravimoSistema
             optionsBuilder.ConfigureWarnings(warnings =>
                 warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -101,6 +100,15 @@ namespace RegistravimoSistema
                 entity.Property(a => a.ButoNumeris)
                       .HasMaxLength(20);
             });
+
+            // Unique Constraints
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
+            modelBuilder.Entity<Person>()
+                .HasIndex(p => p.AsmensKodas)
+                .IsUnique();
 
             // Seed Initial Admin Data
             SeedInitialData(modelBuilder);

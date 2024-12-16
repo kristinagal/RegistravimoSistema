@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RegistravimoSistema.DTOs;
-using RegistravimoSistema.Repositories;
+using RegistravimoSistema.Entities;
 using RegistravimoSistema.Services;
 using System.Security.Claims;
 
@@ -9,106 +9,186 @@ namespace RegistravimoSistema.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PersonController : ControllerBase
     {
         private readonly IPersonService _personService;
-        private readonly IPersonRepository _personRepository;
 
-        public PersonController(IPersonService personService, IPersonRepository personRepository)
+        public PersonController(IPersonService personService)
         {
             _personService = personService;
-            _personRepository = personRepository;
+        }
+
+        private Guid GetCurrentUserId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var parsedUserId))
+                throw new UnauthorizedAccessException("User must be authenticated.");
+            return parsedUserId;
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> CreatePerson([FromBody] PersonRequest request)
         {
-            var currentUserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            if (string.IsNullOrEmpty(currentUserId) || !Guid.TryParse(currentUserId, out var userId))
-                return Unauthorized("User must be logged in.");
+            try
+            {
+                var userId = GetCurrentUserId();
 
-            await _personService.CreatePersonAsync(request, userId);
+                // Check if the user already has a Person entity
+                var existingPerson = await _personService.GetPersonByUserIdAsync(userId);
+                if (existingPerson != null)
+                {
+                    return Conflict("You have already created a person. A user can only create one person.");
+                }
 
-            return Created("", new { message = "Person created successfully!" });
+                await _personService.CreatePersonAsync(request, userId);
+                return CreatedAtAction(nameof(GetPersonById), new { id = userId }, request);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An unexpected error occurred: {ex.Message}");
+            }
         }
 
-        [Authorize]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetPersonById(Guid id)
         {
-            var person = await _personRepository.GetByIdAsync(id);
-
-            if (person == null)
-                return NotFound("Person not found.");
-
-            var response = new PersonResponse
+            try
             {
-                Id = person.Id,
-                Vardas = person.Vardas,
-                Pavarde = person.Pavarde,
-                AsmensKodas = person.AsmensKodas,
-                TelefonoNumeris = person.TelefonoNumeris,
-                ElPastas = person.ElPastas,
-                ProfilioNuotrauka = person.ProfilioNuotrauka != null
-                    ? Convert.ToBase64String(person.ProfilioNuotrauka)
-                    : null,
-                Address = new AddressResponse
+                var person = await _personService.GetPersonByIdAsync(id);
+
+                if (person == null)
+                    return NotFound("Person not found.");
+
+                return Ok(new PersonResponse
                 {
-                    Miestas = person.Address.Miestas,
-                    Gatve = person.Address.Gatve,
-                    NamoNumeris = person.Address.NamoNumeris,
-                    ButoNumeris = person.Address.ButoNumeris
-                }
-            };
-
-            return Ok(response);
-        }
-
-        [Authorize]
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdatePerson(Guid id, [FromBody] PersonRequest request)
-        {
-            var person = await _personRepository.GetByIdAsync(id);
-            if (person == null)
-                return NotFound("Person not found.");
-
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(currentUserId, out var userId) || (person.UserId != userId && !User.IsInRole("Admin")))
-                return Forbid("You do not have permission to update this person.");
-
-            // Update person details
-            if (!string.IsNullOrWhiteSpace(request.Vardas))
-                person.Vardas = request.Vardas;
-
-            if (!string.IsNullOrWhiteSpace(request.Pavarde))
-                person.Pavarde = request.Pavarde;
-
-            if (!string.IsNullOrWhiteSpace(request.AsmensKodas))
-                person.AsmensKodas = request.AsmensKodas;
-
-            if (!string.IsNullOrWhiteSpace(request.TelefonoNumeris))
-                person.TelefonoNumeris = request.TelefonoNumeris;
-
-            if (!string.IsNullOrWhiteSpace(request.ElPastas))
-                person.ElPastas = request.ElPastas;
-
-            if (!string.IsNullOrWhiteSpace(request.ProfilioNuotrauka))
-            {
-                try
-                {
-                    person.ProfilioNuotrauka = Convert.FromBase64String(request.ProfilioNuotrauka);
-                }
-                catch (FormatException)
-                {
-                    return BadRequest("Invalid profile picture format. Ensure it is Base64 encoded.");
-                }
+                    Id = person.Id,
+                    Vardas = person.Vardas,
+                    Pavarde = person.Pavarde,
+                    AsmensKodas = person.AsmensKodas,
+                    TelefonoNumeris = person.TelefonoNumeris,
+                    ElPastas = person.ElPastas,
+                    ProfilioNuotrauka = person.ProfilioNuotrauka != null
+                        ? Convert.ToBase64String(person.ProfilioNuotrauka)
+                        : null,
+                    Address = new AddressResponse
+                    {
+                        Miestas = person.Address.Miestas,
+                        Gatve = person.Address.Gatve,
+                        NamoNumeris = person.Address.NamoNumeris,
+                        ButoNumeris = person.Address.ButoNumeris
+                    }
+                });
             }
-
-            await _personRepository.UpdateAsync(person);
-
-            return Ok("Person updated successfully!");
+            catch (Exception)
+            {
+                return StatusCode(500, "An unexpected error occurred while retrieving the person.");
+            }
         }
+
+        #region Update Individual Fields
+
+        [HttpPatch("{id:guid}/UpdateVardas")]
+        public async Task<IActionResult> UpdateVardas(Guid id, [FromBody] UpdateVardasRequest request)
+        {
+            return await UpdateField(id, "Vardas", request.Vardas);
+        }
+
+        [HttpPatch("{id:guid}/UpdatePavarde")]
+        public async Task<IActionResult> UpdatePavarde(Guid id, [FromBody] UpdatePavardeRequest request)
+        {
+            return await UpdateField(id, "Pavarde", request.Pavarde);
+        }
+
+        [HttpPatch("{id:guid}/UpdateAsmensKodas")]
+        public async Task<IActionResult> UpdateAsmensKodas(Guid id, [FromBody] UpdateAsmensKodasRequest request)
+        {
+            return await UpdateField(id, "AsmensKodas", request.AsmensKodas);
+        }
+
+        [HttpPatch("{id:guid}/UpdateTelefonoNumeris")]
+        public async Task<IActionResult> UpdateTelefonoNumeris(Guid id, [FromBody] UpdateTelefonoNumerisRequest request)
+        {
+            return await UpdateField(id, "TelefonoNumeris", request.TelefonoNumeris);
+        }
+
+        [HttpPatch("{id:guid}/UpdateElPastas")]
+        public async Task<IActionResult> UpdateElPastas(Guid id, [FromBody] UpdateElPastasRequest request)
+        {
+            return await UpdateField(id, "ElPastas", request.ElPastas);
+        }
+
+        [HttpPatch("{id:guid}/UpdateProfilioNuotrauka")]
+        public async Task<IActionResult> UpdateProfilioNuotrauka(Guid id, [FromBody] UpdateProfilioNuotraukaRequest request)
+        {
+            return await UpdateField(id, "ProfilioNuotrauka", request.ProfilioNuotrauka);
+        }
+
+        [HttpPatch("{id:guid}/UpdateMiestas")]
+        public async Task<IActionResult> UpdateMiestas(Guid id, [FromBody] UpdateMiestasRequest request)
+        {
+            return await UpdateField(id, "Miestas", request.Miestas);
+        }
+
+        [HttpPatch("{id:guid}/UpdateGatve")]
+        public async Task<IActionResult> UpdateGatve(Guid id, [FromBody] UpdateGatveRequest request)
+        {
+            return await UpdateField(id, "Gatve", request.Gatve);
+        }
+
+        [HttpPatch("{id:guid}/UpdateNamoNumeris")]
+        public async Task<IActionResult> UpdateNamoNumeris(Guid id, [FromBody] UpdateNamoNumerisRequest request)
+        {
+            return await UpdateField(id, "NamoNumeris", request.NamoNumeris);
+        }
+
+        [HttpPatch("{id:guid}/UpdateButoNumeris")]
+        public async Task<IActionResult> UpdateButoNumeris(Guid id, [FromBody] UpdateButoNumerisRequest request)
+        {
+            return await UpdateField(id, "ButoNumeris", request.ButoNumeris);
+        }
+
+        #endregion
+
+        private async Task<IActionResult> UpdateField(Guid id, string fieldName, string fieldValue)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var userId = GetCurrentUserId();
+                var person = await _personService.GetPersonByIdAsync(id);
+
+                if (person == null)
+                    return NotFound("Person not found.");
+
+                if (person.UserId != userId)
+                    return Forbid("You are not allowed to update this information.");
+
+                await _personService.UpdateFieldAsync(id, fieldName, fieldValue, userId);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An unexpected error occurred while updating the field.");
+            }
+        }
+
     }
 }

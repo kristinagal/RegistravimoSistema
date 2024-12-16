@@ -23,24 +23,7 @@ function renderMenu() {
     }
 }
 
-// Restrict access to pages
-const restrictedPages = ["delete-user.html", "create-person.html", "retrieve-person.html", "update-person.html", "menu.html"];
-const publicPages = ["login.html", "signup.html", "index.html"];
-const currentPage = window.location.pathname.split("/").pop();
-
-if (!publicPages.includes(currentPage) && restrictedPages.includes(currentPage)) {
-    if (!token) {
-        alert("Please log in first.");
-        window.location.href = "login.html";
-    } else if (currentPage === "delete-user.html" && role !== "Admin") {
-        alert("Access denied. Only Admins can access this page.");
-        window.location.href = "menu.html";
-    }
-}
-
-if (token) renderMenu();
-
-// Helper Function: Convert Image to Base64
+// Helper: Convert Image to Base64
 function getBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -50,161 +33,143 @@ function getBase64(file) {
     });
 }
 
-// Login Functionality
-if (currentPage === "login.html") {
-    document.getElementById("login-btn").addEventListener("click", async () => {
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+// Track initial values
+let initialValues = {};
 
-        try {
-            const response = await fetch(`${baseUrl}/Accounts/Login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            });
+// Fetch person details
+document.getElementById("fetch-person-btn")?.addEventListener("click", async () => {
+    const id = document.getElementById("update-id").value;
 
+    try {
+        const response = await fetch(`${baseUrl}/Person/${id}`, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+            const person = await response.json();
+
+            // Populate fields
+            document.getElementById("update-vardas").value = person.vardas;
+            document.getElementById("update-pavarde").value = person.pavarde;
+            document.getElementById("update-asmens-kodas").value = person.asmensKodas;
+            document.getElementById("update-telefono-numeris").value = person.telefonoNumeris;
+            document.getElementById("update-el-pastas").value = person.elPastas;
+            document.getElementById("update-miestas").value = person.address.miestas;
+            document.getElementById("update-gatve").value = person.address.gatve;
+            document.getElementById("update-namo-numeris").value = person.address.namoNumeris;
+            document.getElementById("update-buto-numeris").value = person.address.butoNumeris;
+
+            if (person.profilioNuotrauka) {
+                const profilePreview = document.getElementById("update-profile-preview");
+                profilePreview.src = `data:image/png;base64,${person.profilioNuotrauka}`;
+                profilePreview.classList.remove("hidden");
+            }
+
+            // Store initial values
+            initialValues = {
+                vardas: person.vardas,
+                pavarde: person.pavarde,
+                asmensKodas: person.asmensKodas,
+                telefonoNumeris: person.telefonoNumeris,
+                elPastas: person.elPastas,
+                miestas: person.address.miestas,
+                gatve: person.address.gatve,
+                namoNumeris: person.address.namoNumeris,
+                butoNumeris: person.address.butoNumeris,
+            };
+
+            document.getElementById("update-form").classList.remove("hidden");
+        } else {
             const result = await response.json();
-            if (response.ok) {
-                const payload = JSON.parse(atob(result.token.split(".")[1]));
-                localStorage.setItem("token", result.token);
-                localStorage.setItem("role", payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]);
-
-                alert("Login successful!");
-                window.location.href = "menu.html";
-            } else {
-                document.getElementById("login-message").textContent = result.message || "Login failed.";
-            }
-        } catch {
-            document.getElementById("login-message").textContent = "Error occurred during login.";
+            alert(result.message || "Failed to fetch person details.");
         }
-    });
-}
+    } catch {
+        alert("An error occurred while fetching person details.");
+    }
+});
 
-// Signup Functionality
-if (currentPage === "signup.html") {
-    document.getElementById("signup-btn").addEventListener("click", async () => {
-        const username = document.getElementById("signup-username").value;
-        const password = document.getElementById("signup-password").value;
+// Update single field and show validation errors
+async function updateField(endpoint, fieldName, value, inputElement) {
+    try {
+        const response = await fetch(`${baseUrl}/Person/${endpoint}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ [fieldName]: value }),
+        });
 
-        try {
-            const response = await fetch(`${baseUrl}/Accounts/SignUp`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            });
-
+        if (!response.ok) {
             const result = await response.json();
-            if (response.ok) {
-                alert("Signup successful! You can now log in.");
-                window.location.href = "login.html";
-            } else {
-                document.getElementById("signup-message").textContent = result.message || "Signup failed.";
-            }
-        } catch {
-            document.getElementById("signup-message").textContent = "Error occurred during signup.";
+            showError(inputElement, result.message || `Error updating ${fieldName}.`);
+            return false;
+        } else {
+            clearError(inputElement);
+            return true;
         }
-    });
+    } catch {
+        showError(inputElement, `Error updating ${fieldName}.`);
+        return false;
+    }
 }
 
-// Retrieve Person Functionality
-if (document.getElementById("retrieve-btn")) {
-    document.getElementById("retrieve-btn").addEventListener("click", async () => {
-        const id = document.getElementById("retrieve-id").value;
-
-        try {
-            const response = await fetch(`${baseUrl}/Person/${id}`, {
-                method: "GET",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-
-                // Display profile picture if exists
-                let profilePic = "";
-                if (result.profilioNuotrauka) {
-                    profilePic = `<img src="data:image/png;base64,${result.profilioNuotrauka}" 
-                                  alt="Profile Picture" style="max-width: 200px;" />`;
-                }
-
-                document.getElementById("retrieve-result").innerHTML = `
-                    <pre>${JSON.stringify(result, null, 2)}</pre>
-                    ${profilePic}
-                `;
-            } else {
-                const result = await response.json();
-                document.getElementById("retrieve-result").textContent = result.message || "Failed to retrieve person.";
-            }
-        } catch {
-            document.getElementById("retrieve-result").textContent = "Error occurred during retrieval.";
-        }
-    });
+// Show error message near the input field
+function showError(inputElement, message) {
+    clearError(inputElement);
+    const error = document.createElement("div");
+    error.className = "error-message";
+    error.style.color = "red";
+    error.textContent = message;
+    inputElement.insertAdjacentElement("afterend", error);
 }
 
-// Create Person Functionality
-if (document.getElementById("create-person-btn")) {
-    document.getElementById("create-person-btn").addEventListener("click", async () => {
-        const fileInput = document.getElementById("profile-picture");
-        let profilePicture = null;
-
-        if (fileInput.files.length > 0) {
-            profilePicture = await getBase64(fileInput.files[0]);
-        }
-
-        const data = {
-            vardas: document.getElementById("vardas").value,
-            pavarde: document.getElementById("pavarde").value,
-            asmensKodas: document.getElementById("asmens-kodas").value,
-            telefonoNumeris: document.getElementById("telefono-numeris").value,
-            elPastas: document.getElementById("el-pastas").value,
-            miestas: document.getElementById("miestas").value,
-            gatve: document.getElementById("gatve").value,
-            namoNumeris: document.getElementById("namo-numeris").value,
-            butoNumeris: document.getElementById("buto-numeris").value,
-            profilioNuotrauka: profilePicture
-        };
-
-        try {
-            const response = await fetch(`${baseUrl}/Person`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                alert("Person created successfully!");
-            } else {
-                const result = await response.json();
-                document.getElementById("person-message").textContent = result.message || "Failed to create person.";
-            }
-        } catch {
-            document.getElementById("person-message").textContent = "Error occurred during person creation.";
-        }
-    });
+// Clear error message
+function clearError(inputElement) {
+    const nextSibling = inputElement.nextElementSibling;
+    if (nextSibling && nextSibling.classList.contains("error-message")) {
+        nextSibling.remove();
+    }
 }
 
-// Delete User Functionality (Admin Only)
-if (document.getElementById("delete-btn")) {
-    document.getElementById("delete-btn").addEventListener("click", async () => {
-        const id = document.getElementById("delete-id").value;
+// Save all updates
+document.getElementById("save-updates-btn")?.addEventListener("click", async () => {
+    const id = document.getElementById("update-id").value;
+    const fields = [
+        { id: "update-vardas", field: "Vardas", endpoint: "UpdateVardas" },
+        { id: "update-pavarde", field: "Pavarde", endpoint: "UpdatePavarde" },
+        { id: "update-asmens-kodas", field: "AsmensKodas", endpoint: "UpdateAsmensKodas" },
+        { id: "update-telefono-numeris", field: "TelefonoNumeris", endpoint: "UpdateTelefonoNumeris" },
+        { id: "update-el-pastas", field: "ElPastas", endpoint: "UpdateElPastas" },
+        { id: "update-miestas", field: "Miestas", endpoint: "UpdateAddress/Miestas" },
+        { id: "update-gatve", field: "Gatve", endpoint: "UpdateAddress/Gatve" },
+        { id: "update-namo-numeris", field: "NamoNumeris", endpoint: "UpdateAddress/NamoNumeris" },
+        { id: "update-buto-numeris", field: "ButoNumeris", endpoint: "UpdateAddress/ButoNumeris" },
+    ];
 
-        try {
-            const response = await fetch(`${baseUrl}/Accounts/DeleteUser/${id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
+    let success = true;
 
-            if (response.ok) {
-                alert("User deleted successfully!");
-            } else {
-                const result = await response.json();
-                document.getElementById("delete-message").textContent = result.message || "Failed to delete user.";
-            }
-        } catch {
-            document.getElementById("delete-message").textContent = "Error occurred while deleting user.";
+    for (const { id, field, endpoint } of fields) {
+        const input = document.getElementById(id);
+        if (input.value !== initialValues[field.toLowerCase()]) {
+            const updated = await updateField(`${id}/${endpoint}`, field, input.value, input);
+            if (!updated) success = false;
         }
-    });
-}
+    }
+
+    // Handle profile picture
+    const fileInput = document.getElementById("update-profile-picture");
+    if (fileInput.files.length > 0) {
+        const base64Image = await getBase64(fileInput.files[0]);
+        const profileInput = document.getElementById("update-profile-picture");
+        const updated = await updateField("UpdateProfilioNuotrauka", "ProfilioNuotrauka", base64Image, profileInput);
+        if (!updated) success = false;
+    }
+
+    if (success) {
+        alert("All updates were successfully saved!");
+    } else {
+        alert("Some fields failed to update. Please check for errors.");
+    }
+});

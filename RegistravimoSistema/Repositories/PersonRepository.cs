@@ -8,9 +8,9 @@ namespace RegistravimoSistema.Repositories
         Task AddAsync(Person person);
         Task<Person?> GetByIdAsync(Guid id);
         Task UpdateAsync(Person person);
+        Task<Person?> GetByUserIdAsync(Guid userId);
+        Task DeleteAsync(Guid personId);
 
-        //Task DeleteAsync(Guid id);
-        //Task<IEnumerable<Person>> GetAllAsync();
     }
 
     public class PersonRepository : IPersonRepository
@@ -39,19 +39,21 @@ namespace RegistravimoSistema.Repositories
             await _context.SaveChangesAsync();
         }
 
-        //public async Task<IEnumerable<Person>> GetAllAsync()
-        //{
-        //    return await _context.Persons.Include(p => p.Address).ToListAsync();
-        //}
+        public async Task<Person?> GetByUserIdAsync(Guid userId)
+        {
+            return await _context.Persons
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+        }
 
-        //public async Task DeleteAsync(Guid id)
-        //{
-        //    var person = await GetByIdAsync(id);
-        //    if (person != null)
-        //    {
-        //        _context.Persons.Remove(person);
-        //        await _context.SaveChangesAsync();
-        //    }
-        //}
+        public async Task DeleteAsync(Guid personId)
+        {
+            var person = await _context.Persons.FindAsync(personId);
+            if (person != null)
+            {
+                _context.Persons.Remove(person);
+                await _context.SaveChangesAsync();
+            }
+        }
+
     }
 }

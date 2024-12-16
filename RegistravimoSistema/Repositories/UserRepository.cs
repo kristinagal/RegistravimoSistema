@@ -10,8 +10,6 @@ namespace RegistravimoSistema.Repositories
         Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByUsernameAsync(string username);
 
-        //Task<IEnumerable<User>> GetAllAsync();
-        //Task UpdateAsync(User user);
     }
 
     public class UserRepository : IUserRepository
@@ -49,15 +47,6 @@ namespace RegistravimoSistema.Repositories
             return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        //public async Task<IEnumerable<User>> GetAllAsync()
-        //{
-        //    return await _context.Users.ToListAsync();
-        //}
 
-        //public async Task UpdateAsync(User user)
-        //{
-        //    _context.Users.Update(user);
-        //    await _context.SaveChangesAsync();
-        //}
     }
 }

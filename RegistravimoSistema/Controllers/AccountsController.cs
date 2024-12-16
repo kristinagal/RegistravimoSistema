@@ -69,8 +69,17 @@ namespace RegistravimoSistema.Controllers
             if (user == null)
                 return NotFound("User not found.");
 
-            await _userRepository.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                // Delete person of the user
+                await _accountService.DeleteUserWithPersonAsync(id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while deleting the user: {ex.Message}");
+            }
         }
     }
 }

@@ -3,6 +3,9 @@ using Microsoft.OpenApi.Models;
 using RegistravimoSistema.Services;
 using RegistravimoSistema.Mappers;
 using RegistravimoSistema.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace RegistravimoSistema
 {
@@ -12,23 +15,32 @@ namespace RegistravimoSistema
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configure DbContext with SQL Server
+            // Add services to the container
+
+            // DbContext configuration
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Repositories
-            builder.Services.AddScoped<UserRepository>();
-            builder.Services.AddScoped<PersonRepository>();
-            builder.Services.AddScoped<AddressRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IPersonRepository, PersonRepository>();
+            builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 
-            // Controllers
-            builder.Services.AddControllers();
+            // Services
+            builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<IPersonService, PersonService>();
 
-            // Authentication using JWT
-            builder.Services.AddAuthentication("Bearer")
+            // Mappers
+            builder.Services.AddScoped<IAccountMapper, AccountMapper>();
+            builder.Services.AddScoped<IPersonMapper, PersonMapper>();
+
+            // Authentication and Authorization
+            var jwtKey = builder.Configuration["Jwt:Key"]!;
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
                         ValidateAudience = true,
@@ -36,24 +48,27 @@ namespace RegistravimoSistema
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
-                        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
                     };
                 });
 
-            // Add authorization
             builder.Services.AddAuthorization();
 
-            // Register services
-            builder.Services.AddScoped<IJwtService, JwtService>();
-            builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IPersonService, PersonService>();
+            // CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
-            // Register mappers
-            builder.Services.AddScoped<IAccountMapper, AccountMapper>();
-            builder.Services.AddScoped<IPersonMapper, PersonMapper>();
+            // Controllers and JSON Serialization
+            builder.Services.AddControllers();
 
-            // Configure Swagger
+            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -63,13 +78,17 @@ namespace RegistravimoSistema
                     Version = "v1",
                     Description = "An API for user and person management."
                 });
+
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    In = ParameterLocation.Header,
-                    Description = "Please insert JWT with Bearer into field",
+                    Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer <token>'",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
                 });
+
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -81,22 +100,12 @@ namespace RegistravimoSistema
                                 Id = "Bearer"
                             }
                         },
-                        new string[] { }
+                        new string[] {}
                     }
                 });
             });
 
-            // Configure CORS (for local testing)
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
-                });
-            });
-
+            // Build the application
             var app = builder.Build();
 
             // Configure the HTTP request pipeline
@@ -107,7 +116,6 @@ namespace RegistravimoSistema
             }
 
             app.UseHttpsRedirection();
-
             app.UseCors("AllowAll");
 
             app.UseAuthentication();
