@@ -9,6 +9,7 @@ using RegistravimoSistema.Repositories;
 using RegistravimoSistema.DTOs;
 using RegistravimoSistema.Entities;
 using RegistravimoSistema.Mappers;
+using Microsoft.Extensions.Logging;
 
 namespace RegistravimoSistema_Tests.ControllersTests
 {
@@ -18,6 +19,7 @@ namespace RegistravimoSistema_Tests.ControllersTests
         private readonly Mock<IAccountService> _mockAccountService;
         private readonly Mock<IJwtService> _mockJwtService;
         private readonly Mock<IAccountMapper> _mockAccountMapper;
+        private readonly Mock<ILogger<AccountsController>> _mockLogger;
 
         private readonly AccountsController _controller;
 
@@ -27,12 +29,14 @@ namespace RegistravimoSistema_Tests.ControllersTests
             _mockAccountService = new Mock<IAccountService>();
             _mockJwtService = new Mock<IJwtService>();
             _mockAccountMapper = new Mock<IAccountMapper>();
+            _mockLogger = new Mock<ILogger<AccountsController>>();
 
             _controller = new AccountsController(
                 _mockUserRepository.Object,
                 _mockJwtService.Object,
                 _mockAccountService.Object,
-                _mockAccountMapper.Object
+                _mockAccountMapper.Object,
+                _mockLogger.Object
             );
         }
 

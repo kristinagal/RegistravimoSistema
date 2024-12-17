@@ -9,6 +9,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace RegistravimoSistema_Tests.ControllersTests
 {
@@ -17,10 +18,12 @@ namespace RegistravimoSistema_Tests.ControllersTests
         private readonly Mock<IPersonService> _mockPersonService;
         private readonly PersonController _controller;
         private readonly Guid _currentUserId;
+        private readonly Mock<ILogger<PersonController>> _mockLogger;
 
         public PersonControllerTests()
         {
             _mockPersonService = new Mock<IPersonService>();
+            _mockLogger = new Mock<ILogger<PersonController>>();
 
             // Mock user authentication
             _currentUserId = Guid.NewGuid();
@@ -36,7 +39,7 @@ namespace RegistravimoSistema_Tests.ControllersTests
                 HttpContext = mockHttpContext.Object
             };
 
-            _controller = new PersonController(_mockPersonService.Object)
+            _controller = new PersonController(_mockPersonService.Object, _mockLogger.Object)
             {
                 ControllerContext = mockControllerContext
             };
