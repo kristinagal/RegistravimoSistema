@@ -1,8 +1,6 @@
-// Restrict access to authorized roles
-restrictAccess(["Admin", "User"]);
+restrictAccess(["Admin", "User"]); // Restrict access to Admin and User roles
 
-// Global variable to track initial values
-let initialValues = {};
+let initialValues = {}; // Store initial values for comparison
 
 // Fetch and populate person details
 document.getElementById("fetch-person-btn")?.addEventListener("click", async () => {
@@ -14,7 +12,7 @@ document.getElementById("fetch-person-btn")?.addEventListener("click", async () 
     generalError.textContent = "";
 
     if (!personId) {
-        showError(personIdInput, "Please enter a valid Person ID.");
+        showError(personIdInput, "Prašome įvesti galiojantį asmens ID.");
         return;
     }
 
@@ -27,16 +25,16 @@ document.getElementById("fetch-person-btn")?.addEventListener("click", async () 
         if (!response.ok) {
             switch (response.status) {
                 case 401:
-                    showError(personIdInput, "Unauthorized: Please log in again.");
+                    showError(personIdInput, "Esate neprisijungęs. Prisijunkite iš naujo.");
                     break;
                 case 403:
-                    showError(personIdInput, "Forbidden: You do not have permission to access this resource.");
+                    showError(personIdInput, "Neturite teisių peržiūrėti šį asmenį.");
                     break;
                 case 404:
-                    showError(personIdInput, "Person not found.");
+                    showError(personIdInput, "Asmuo su tokiu ID nerastas.");
                     break;
                 default:
-                    showError(personIdInput, "Failed to fetch person details.");
+                    showError(personIdInput, "Įvyko klaida gaunant asmens duomenis.");
             }
             return;
         }
@@ -46,12 +44,12 @@ document.getElementById("fetch-person-btn")?.addEventListener("click", async () 
 
         document.getElementById("update-form").classList.remove("hidden");
     } catch (error) {
-        console.error("Error fetching person details:", error);
-        showError(personIdInput, "An error occurred while fetching person details.");
+        console.error("Klaida:", error);
+        showError(personIdInput, "Įvyko serverio klaida. Bandykite vėliau.");
     }
 });
 
-// Populate form fields
+// Populate form fields with fetched person data
 function populatePersonFields(person) {
     document.getElementById("update-vardas").value = person.vardas || "";
     document.getElementById("update-pavarde").value = person.pavarde || "";
@@ -66,24 +64,18 @@ function populatePersonFields(person) {
         document.getElementById("update-buto-numeris").value = person.address.butoNumeris || "";
     }
 
-    const profilePreview = document.getElementById("update-profile-preview");
-    if (person.profilioNuotrauka) {
-        profilePreview.src = `data:image/png;base64,${person.profilioNuotrauka}`;
-        profilePreview.classList.remove("hidden");
-    } else {
-        profilePreview.classList.add("hidden");
-    }
+    displayProfilePicture(person.profilioNuotrauka, "update-profile-preview");
 
     initialValues = {
-        vardas: person.vardas || "",
-        pavarde: person.pavarde || "",
-        asmenskodas: person.asmensKodas || "",
-        telefononumeris: person.telefonoNumeris || "",
-        elpastas: person.elPastas || "",
-        miestas: person.address?.miestas || "",
-        gatve: person.address?.gatve || "",
-        namonumeris: person.address?.namoNumeris || "",
-        butonumeris: person.address?.butoNumeris || "",
+        Vardas: person.vardas || "",
+        Pavarde: person.pavarde || "",
+        AsmensKodas: person.asmensKodas || "",
+        TelefonoNumeris: person.telefonoNumeris || "",
+        ElPastas: person.elPastas || "",
+        Miestas: person.address?.miestas || "",
+        Gatve: person.address?.gatve || "",
+        NamoNumeris: person.address?.namoNumeris || "",
+        ButoNumeris: person.address?.butoNumeris || "",
     };
 }
 
@@ -105,19 +97,19 @@ async function updateField(personId, endpoint, fieldName, value, inputElement) {
             const result = await response.json();
             switch (response.status) {
                 case 401:
-                    showError(inputElement, "Unauthorized: Please log in again.");
+                    showError(inputElement, "Esate neprisijungęs. Prisijunkite iš naujo.");
                     break;
                 case 403:
-                    showError(inputElement, "Forbidden: You do not have permission to update this field.");
+                    showError(inputElement, "Neturite teisės atnaujinti šio lauko.");
                     break;
                 case 404:
-                    showError(inputElement, "Resource not found.");
+                    showError(inputElement, "Asmuo nerastas.");
                     break;
                 case 400:
-                    showError(inputElement, result.message || `Invalid data for ${fieldName}.`);
+                    showError(inputElement, result.message || `Neteisingi duomenys laukui ${fieldName}.`);
                     break;
                 default:
-                    showError(inputElement, "An unexpected error occurred.");
+                    showError(inputElement, "Įvyko netikėta klaida.");
             }
             return false;
         }
@@ -125,8 +117,8 @@ async function updateField(personId, endpoint, fieldName, value, inputElement) {
         clearError(inputElement);
         return true;
     } catch (error) {
-        console.error(`Error updating ${fieldName}:`, error);
-        showError(inputElement, `An error occurred while updating ${fieldName}.`);
+        console.error(`Klaida atnaujinant ${fieldName}:`, error);
+        showError(inputElement, `Įvyko klaida atnaujinant lauką ${fieldName}.`);
         return false;
     }
 }
@@ -137,7 +129,7 @@ document.getElementById("save-updates-btn")?.addEventListener("click", async () 
 
     if (!personId) {
         const personIdInput = document.getElementById("update-id");
-        showError(personIdInput, "Person ID is required.");
+        showError(personIdInput, "Asmens ID yra privalomas.");
         return;
     }
 
@@ -147,17 +139,17 @@ document.getElementById("save-updates-btn")?.addEventListener("click", async () 
         { id: "update-asmens-kodas", field: "AsmensKodas", endpoint: "UpdateAsmensKodas" },
         { id: "update-telefono-numeris", field: "TelefonoNumeris", endpoint: "UpdateTelefonoNumeris" },
         { id: "update-el-pastas", field: "ElPastas", endpoint: "UpdateElPastas" },
-        { id: "update-miestas", field: "Miestas", endpoint: "UpdateAddress/Miestas" },
-        { id: "update-gatve", field: "Gatve", endpoint: "UpdateAddress/Gatve" },
-        { id: "update-namo-numeris", field: "NamoNumeris", endpoint: "UpdateAddress/NamoNumeris" },
-        { id: "update-buto-numeris", field: "ButoNumeris", endpoint: "UpdateAddress/ButoNumeris" },
+        { id: "update-miestas", field: "Miestas", endpoint: "UpdateMiestas" },
+        { id: "update-gatve", field: "Gatve", endpoint: "UpdateGatve" },
+        { id: "update-namo-numeris", field: "NamoNumeris", endpoint: "UpdateNamoNumeris" },
+        { id: "update-buto-numeris", field: "ButoNumeris", endpoint: "UpdateButoNumeris" },
     ];
 
     let success = true;
 
     for (const { id, field, endpoint } of fields) {
         const input = document.getElementById(id);
-        if (input.value !== initialValues[field.toLowerCase()]) {
+        if (input.value !== initialValues[field]) {
             const updated = await updateField(personId, endpoint, field, input.value, input);
             if (!updated) success = false;
         }
@@ -170,21 +162,36 @@ document.getElementById("save-updates-btn")?.addEventListener("click", async () 
             const updated = await updateField(personId, "UpdateProfilioNuotrauka", "ProfilioNuotrauka", profilePicture, fileInput);
             if (!updated) success = false;
         } catch (error) {
-            console.error("Error converting file to Base64:", error);
-            showGeneralError("Failed to process profile picture.");
+            console.error("Klaida apdorojant nuotrauką:", error);
+            showGeneralError("Nepavyko apdoroti nuotraukos.");
             success = false;
         }
     }
 
-    showGeneralError(success ? "All updates were successfully saved!" : "Some fields failed to update.");
+    if (success) {
+        alert("Atnaujinimai buvo sėkmingai išsaugoti!");
+    } else {
+        showGeneralError("Kai kurių laukų atnaujinti nepavyko. Patikrinkite klaidas ir bandykite dar kartą.");
+    }
 });
 
-// Show and clear errors
+// Display profile picture
+function displayProfilePicture(base64Image, imageElementId) {
+    const profilePreview = document.getElementById(imageElementId);
+    if (base64Image) {
+        profilePreview.src = `data:image/png;base64,${base64Image}`;
+        profilePreview.classList.remove("hidden");
+    } else {
+        profilePreview.src = "";
+        profilePreview.classList.add("hidden");
+    }
+}
+
+// Error handling
 function showError(inputElement, message) {
     clearError(inputElement);
     const errorDiv = document.createElement("div");
     errorDiv.className = "error-message";
-    errorDiv.style.color = "red";
     errorDiv.textContent = message;
     inputElement.insertAdjacentElement("afterend", errorDiv);
 }
@@ -196,9 +203,10 @@ function clearError(inputElement) {
 function showGeneralError(message) {
     const generalError = document.getElementById("general-error");
     generalError.textContent = message;
-    generalError.style.color = "red";
+    generalError.classList.add("error-message");
 }
 
+// Convert file to Base64
 async function getBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();

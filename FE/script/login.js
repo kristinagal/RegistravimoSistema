@@ -15,14 +15,14 @@ document.getElementById("login-btn")?.addEventListener("click", async () => {
             localStorage.setItem("token", result.token);
             localStorage.setItem("role", payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]);
 
-console.log(payload);
+            console.log(payload);
 
-            alert("Login successful!");
+            alert("Prisijungimas sėkmingas!");
             window.location.href = "menu.html";
         } else {
-            document.getElementById("login-message").textContent = result.message || "Login failed.";
+            document.getElementById("login-message").textContent = result.message || "Prisijungti nepavyko.";
         }
     } catch {
-        document.getElementById("login-message").textContent = "Error occurred during login.";
+        document.getElementById("login-message").textContent = "Įvyko klaida bandant prisijungti.";
     }
 });

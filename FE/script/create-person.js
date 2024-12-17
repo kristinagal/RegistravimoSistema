@@ -1,13 +1,13 @@
-restrictAccess(["Admin", "User"]); // Restrict access to logged-in users
+restrictAccess(["Admin", "User"]); 
 
 document.getElementById("create-person-btn")?.addEventListener("click", async () => {
-    // Validate that the token exists
+    // Patikrinkite, ar egzistuoja jwt token
     if (!token) {
-        showGeneralError("You are not logged in. Please log in to continue.");
+        showGeneralError("Jūs nesate prisijungę. Prisijunkite norėdami tęsti.");
         return;
     }
 
-    // Get the file input and handle Base64 conversion
+    // Gauti failo įvestį ir konvertuoti į Base64
     const fileInput = document.getElementById("profile-picture");
     let profilePicture = null;
 
@@ -16,12 +16,11 @@ document.getElementById("create-person-btn")?.addEventListener("click", async ()
             profilePicture = await getBase64(fileInput.files[0]);
         }
     } catch (error) {
-        console.error("Error converting file to Base64:", error);
-        showGeneralError("Failed to process profile picture. Please try again.");
+        console.error("Klaida konvertuojant failą į Base64:", error);
+        showGeneralError("Nepavyko apdoroti profilio nuotraukos. Bandykite dar kartą.");
         return;
     }
 
-    // Safely retrieve input values
     const getValue = (id) => document.getElementById(id)?.value?.trim() || "";
 
     const data = {
@@ -39,14 +38,14 @@ document.getElementById("create-person-btn")?.addEventListener("click", async ()
 
     console.log(data);
 
-    // Validate required fields before sending
+    // Privalomų laukų patikrinimas
     if (!data.vardas || !data.pavarde || !data.asmensKodas || !data.elPastas || !profilePicture) {
-        showGeneralError("All fields, including a profile picture, are required.");
+        showGeneralError("Visi laukai, įskaitant profilio nuotrauką, yra privalomi.");
         return;
     }
     console.log(data);
     
-    // Send data to the API
+    // Siųsti duomenis į API
     try {
         const response = await fetch(`${baseUrl}/Person`, {
             method: "POST",
@@ -58,32 +57,32 @@ document.getElementById("create-person-btn")?.addEventListener("click", async ()
         });
 
         if (response.ok) {
-            alert("Person created successfully!");
+            alert("Asmuo sėkmingai sukurtas!");
             document.getElementById("create-person-form")?.reset();
             clearAllErrors();
         } else {
             const result = await response.json();
-            console.error("API Error:", result);
+            console.error("API klaida:", result);
             if (result.errors) showValidationErrors(result.errors);
-            else showGeneralError(result.message || "Failed to create person.");
+            else showGeneralError(result.message || "Nepavyko sukurti asmens.");
         }
     } catch (error) {
-        console.error("Error creating person:", error);
-        showGeneralError("An unexpected error occurred. Please try again later.");
+        console.error("Klaida kuriant asmenį:", error);
+        showGeneralError("Įvyko netikėta klaida. Bandykite dar kartą vėliau.");
     }
 });
 
-// Helper to convert file to Base64
+// Pagalbinė funkcija konvertuoti failą į Base64
 async function getBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]); // Remove metadata
+        reader.onload = () => resolve(reader.result.split(",")[1]); // Pašalina metaduomenis
         reader.onerror = (error) => reject(error);
         reader.readAsDataURL(file);
     });
 }
 
-// Functions to show errors (reused where needed)
+// Funkcijos klaidoms rodyti (naudojamos, kai reikia)
 function showValidationErrors(errors) {
     clearAllErrors();
     for (const field in errors) {
@@ -108,6 +107,6 @@ function showGeneralError(message) {
         errorContainer.textContent = message;
         errorContainer.style.color = "red";
     } else {
-        alert(message); // Fallback if container doesn't exist
+        alert(message); // Atsarginis variantas, jei konteinerio nėra
     }
 }

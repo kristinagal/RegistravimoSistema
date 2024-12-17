@@ -11,12 +11,12 @@ document.getElementById("signup-btn")?.addEventListener("click", async () => {
 
         const result = await response.json();
         if (response.ok) {
-            alert("Signup successful! You can now log in.");
+            alert("Registracija sėkminga! Dabar galite prisijungti.");
             window.location.href = "login.html";
         } else {
-            document.getElementById("signup-message").textContent = result.message || "Signup failed.";
+            document.getElementById("signup-message").textContent = result.message || "Registracija nepavyko.";
         }
     } catch {
-        document.getElementById("signup-message").textContent = "Error occurred during signup.";
+        document.getElementById("signup-message").textContent = "Įvyko klaida registracijos metu.";
     }
 });

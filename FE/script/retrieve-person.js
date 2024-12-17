@@ -4,7 +4,7 @@ document.getElementById("retrieve-btn")?.addEventListener("click", async () => {
     const id = document.getElementById("retrieve-id").value.trim();
 
     if (!id) {
-        displayError("Please enter a valid Person ID.");
+        displayError("Įveskite teisingą asmens ID.");
         return;
     }
 
@@ -17,15 +17,11 @@ document.getElementById("retrieve-btn")?.addEventListener("click", async () => {
         if (response.ok) {
             const person = await response.json();
 
-            let profilePic = "";
-            if (person.profilioNuotrauka) {
-                profilePic = `<img src="data:image/png;base64,${person.profilioNuotrauka}" 
-                                alt="Profile Picture" class="profile-picture" />`;
-            }
+            // Display profile picture using reusable function
+            displayProfilePicture(person.profilioNuotrauka, "retrieve-profile-preview");
 
             // Display person data in a table
             document.getElementById("retrieve-result").innerHTML = `
-                <h2>Person Details</h2>
                 <table>
                     <tr><th>Vardas</th><td>${person.vardas || "N/A"}</td></tr>
                     <tr><th>Pavarde</th><td>${person.pavarde || "N/A"}</td></tr>
@@ -37,14 +33,13 @@ document.getElementById("retrieve-btn")?.addEventListener("click", async () => {
                     <tr><th>Namo Numeris</th><td>${person.address?.namoNumeris || "N/A"}</td></tr>
                     <tr><th>Buto Numeris</th><td>${person.address?.butoNumeris || "N/A"}</td></tr>
                 </table>
-                ${profilePic}
             `;
         } else {
-            displayError("Failed to retrieve person. Invalid ID or no data found.");
+            displayError("Nepavyko rasti asmens su šiuo ID.");
         }
     } catch (error) {
-        console.error("Error retrieving person details:", error);
-        displayError("An error occurred during retrieval. Please try again later.");
+        console.error("Klaida:", error);
+        displayError("Klaida. Pabandykite vėliau.");
     }
 });
 

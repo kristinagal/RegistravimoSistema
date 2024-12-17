@@ -7,21 +7,21 @@ function renderMenu() {
     const menuContainer = document.getElementById("menu");
     if (menuContainer) {
         menuContainer.innerHTML = `
-            <button onclick="window.location.href='create-person.html'">Create Person</button>
-            <button onclick="window.location.href='update-person.html'">Update Person</button>
-            <button onclick="window.location.href='retrieve-person.html'">Retrieve Person</button>
+            <button onclick="window.location.href='create-person.html'">Sukurti</button>
+            <button onclick="window.location.href='update-person.html'">Atnaujinti</button>
+            <button onclick="window.location.href='retrieve-person.html'">Ieškoti</button>
             ${
                 role === "Admin"
-                    ? `<button onclick="window.location.href='delete-user.html'">Delete User</button>`
+                    ? `<button onclick="window.location.href='delete-user.html'">Šalinti paskyrą</button>`
                     : ""
             }
-            <button id="logout-btn">Logout</button>
+            <button id="logout-btn">Atsijungti</button>
         `;
 
         document.getElementById("logout-btn").addEventListener("click", () => {
             localStorage.removeItem("token");
             localStorage.removeItem("role");
-            alert("You have been logged out.");
+            alert("Atsijungėte sėkmingai.");
             window.location.href = "index.html";
         });
     }
@@ -40,22 +40,40 @@ async function getBase64(file) {
     });
 }
 
+/**
+ * Updates the profile picture display.
+ * @param {string} base64Image - Base64 encoded image string.
+ * @param {string} imgElementId - The ID of the image element to update.
+ */
+
+function displayProfilePicture(base64Image, imageElementId) {
+    const profilePreview = document.getElementById(imageElementId);
+
+    if (base64Image) {
+        profilePreview.src = `data:image/png;base64,${base64Image}`;
+        profilePreview.classList.remove("hidden");
+    } else {
+        profilePreview.src = ""; // Clear invalid src
+        profilePreview.classList.add("hidden");
+    }
+}
+
 // Shared: Access Restriction
 function restrictAccess(allowedRoles = []) {
     if (!token) {
-        alert("Please log in first.");
+        alert("Norėdami tęsti prisijunkite.");
         window.location.href = "login.html";
         return;
     }
 
     if (!role) {
-        alert("Your role is not defined. Please log in again.");
+        alert("Jūsų rolė neapibrėžta. Prisijunkite iš naujo.");
         window.location.href = "login.html";
         return;
     }
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
-        alert("Access denied.");
+        alert("Neturite teisių atlikti šį veiksmą.");
         window.location.href = "menu.html";
     }
 }

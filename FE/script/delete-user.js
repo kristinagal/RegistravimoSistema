@@ -10,12 +10,12 @@ document.getElementById("delete-btn")?.addEventListener("click", async () => {
         });
 
         if (response.ok) {
-            alert("User deleted successfully!");
+            alert("Vartotojas sėkmingai ištrintas!");
             document.getElementById("delete-id").value = "";
         } else {
-            alert("Failed to delete user.");
+            alert("Nepavyko ištrinti vartotojo.");
         }
     } catch {
-        alert("Error occurred while deleting user.");
+        alert("Įvyko klaida šalinant vartotoją.");
     }
 });

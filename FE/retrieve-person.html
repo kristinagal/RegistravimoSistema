@@ -3,20 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrieve Person</title>
+    <title>Raskite asmens profilį</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>Retrieve Person</h1>
+        <h1>Raskite asmens profilį</h1>
         <div id="menu"></div>
     </header>
     <main>
         <section id="retrieve-section">
+            <label for="retrieve-id">Įveskite asmens ID:</label>
             <input type="text" id="retrieve-id" placeholder="Person ID">
-            <button id="retrieve-btn">Retrieve</button>
-            <div id="retrieve-result"></div>
+            <button id="retrieve-btn">Rasti</button>
+            <div class="general-error"></div>
+            <p id="retrieve-message"></p>
+
+            <div id="retrieve-result" style="margin-top: 10px;"></div>
+            
+            <div class="image-container">
+                <img id="retrieve-profile-preview" class="profile-preview hidden" alt="Profile Picture">
+            </div>
+            
+
         </section>
+
     </main>
     <script src="script/common.js"></script>
     <script src="script/retrieve-person.js"></script>

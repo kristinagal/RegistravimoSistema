@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Person</title>
+    <title>Atnaujinkite asmens profilį</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>Update Person</h1>
+        <h1>Atnaujinkite asmens profilį</h1>
         <div id="menu"></div>
     </header>
 
@@ -16,38 +16,38 @@
         <section id="update-section">
             <!-- Fetch Person ID -->
             <div>
-                <label for="update-id">Enter Person ID:</label>
-                <input type="text" id="update-id" />
+                <label for="update-id">Įveskite asmens ID:</label>
+                <input type="text" id="update-id" placeholder="Person ID">
                 <div id="general-error" style="color: red; margin-top: 5px;"></div>
             </div>
-            <button id="fetch-person-btn">Fetch Person</button>
+
+            <button id="fetch-person-btn">Rasti</button>
 
             <!-- Update Form -->
             <div id="update-form" class="hidden">
-                <h2>Update Person Details</h2>
+                <h2>Atnaujinkite asmens informaciją</h2>
 
                 <!-- Vardas -->
                 <label for="update-vardas">Vardas:</label>
                 <input type="text" id="update-vardas" placeholder="Vardas">
 
                 <!-- Pavarde -->
-                <label for="update-pavarde">Pavarde:</label>
+                <label for="update-pavarde">Pavardė:</label>
                 <input type="text" id="update-pavarde" placeholder="Pavarde">
 
                 <!-- Asmens Kodas -->
-                <label for="update-asmens-kodas">Asmens Kodas:</label>
+                <label for="update-asmens-kodas">Asmens kodas:</label>
                 <input type="text" id="update-asmens-kodas" placeholder="Asmens Kodas">
 
                 <!-- Telefono Numeris -->
-                <label for="update-telefono-numeris">Telefono Numeris:</label>
+                <label for="update-telefono-numeris">Telefono numeris:</label>
                 <input type="text" id="update-telefono-numeris" placeholder="Telefono Numeris">
 
                 <!-- El. Paštas -->
-                <label for="update-el-pastas">El. Paštas:</label>
+                <label for="update-el-pastas">El. paštas:</label>
                 <input type="email" id="update-el-pastas" placeholder="El. Paštas">
 
-                <!-- Address Fields -->
-                <h3>Address Details</h3>
+                <!-- Adresas -->
                 <label for="update-miestas">Miestas:</label>
                 <input type="text" id="update-miestas" placeholder="Miestas">
 
@@ -60,13 +60,16 @@
                 <label for="update-buto-numeris">Buto Numeris:</label>
                 <input type="text" id="update-buto-numeris" placeholder="Buto Numeris">
 
-                <!-- Profile Picture -->
-                <label for="update-profile-picture">Profile Picture:</label>
+                <!-- Nuotrauka -->
+                <label for="update-profile-picture">Profilio nuotrauka:</label>
                 <input type="file" id="update-profile-picture" accept="image/*">
-                <img id="update-profile-preview" class="hidden" alt="Profile Picture Preview" style="max-width: 200px; max-height: 200px; display: block; margin-top: 10px;">
-
+                
+                <div class="image-container">
+                    <img id="update-profile-preview" class="profile-picture hidden" alt="Profile Picture">
+                </div>
+          
                 <!-- Save Updates -->
-                <button id="save-updates-btn">Save Updates</button>
+                <button id="save-updates-btn">Saugoti</button>
                 <p id="update-message" style="color: red;"></p>
             </div>
         </section>

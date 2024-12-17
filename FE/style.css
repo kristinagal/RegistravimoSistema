@@ -98,14 +98,6 @@ table th {
     font-weight: bold;
 }
 
-img.profile-picture {
-    display: block;
-    margin: 20px auto;
-    max-width: 200px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
 /* Error Message Styling */
 .error-message {
     color: red;
@@ -115,11 +107,6 @@ img.profile-picture {
     margin-right: auto;
     text-align: left;
     max-width: 400px;
-}
-
-/* Hidden Element */
-.hidden {
-    display: none;
 }
 
 /* Preformatted Text (For Debugging or Raw Data) */
@@ -152,6 +139,31 @@ pre {
 
 #menu button:hover {
     color: #ddd;
+}
+
+/* Profile Picture Styles */
+.profile-preview {
+    display: block;
+    margin: 10px auto; /* Center horizontally */
+    max-width: 150px; /* Set consistent size */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.hidden {
+    display: none; /* Completely hide the element */
+}
+
+/* Image Container for Centering */
+.image-container {
+    text-align: center; /* Center inline elements like images */
+}
+
+/* General Error Styling */
+.general-error {
+    color: red;
+    margin-top: 5px;
 }
 
 /* Media Queries for Responsive Design */
