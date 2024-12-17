@@ -55,46 +55,86 @@ public class PersonService : IPersonService
 
     public async Task UpdateFieldAsync(Guid personId, string fieldName, string fieldValue, Guid userId)
     {
-        if (string.IsNullOrWhiteSpace(fieldValue))
-            throw new ArgumentException($"{fieldName} cannot be empty.");
-
         var person = await _personRepository.GetByIdAsync(personId);
-        if (person == null) throw new Exception("Person not found.");
-        if (person.UserId != userId)
-            throw new UnauthorizedAccessException("You do not have permission to update this field.");
+        if (person == null)
+            throw new ArgumentException("Person not found.");
 
         try
         {
             switch (fieldName)
             {
-                case "Vardas": person.Vardas = fieldValue; break;
-                case "Pavarde": person.Pavarde = fieldValue; break;
-                case "AsmensKodas": person.AsmensKodas = fieldValue; break;
-                case "TelefonoNumeris": person.TelefonoNumeris = fieldValue; break;
-                case "ElPastas": person.ElPastas = fieldValue; break;
-
-                case "ProfilioNuotrauka":
-                    // Use the same logic as in CreatePersonAsync
-                    person.ProfilioNuotrauka = Convert.FromBase64String(
-                        ProcessProfilePhoto(fieldValue)
-                    );
+                case "Vardas":
+                    person.Vardas = fieldValue;
                     break;
-
+                case "Pavarde":
+                    person.Pavarde = fieldValue;
+                    break;
+                case "TelefonoNumeris":
+                    person.TelefonoNumeris = fieldValue;
+                    break;
+                case "ElPastas":
+                    person.ElPastas = fieldValue;
+                    break;
                 default:
-                    throw new ArgumentException("Invalid field name.");
+                    throw new ArgumentException("Invalid field name."); // Directly throw ArgumentException
             }
 
             await _personRepository.UpdateAsync(person);
         }
-        catch (FormatException)
+        catch (ArgumentException) // Catch but rethrow ArgumentException
         {
-            throw new ArgumentException("Invalid profile picture format. Ensure the image is Base64-encoded.");
+            //_logger.LogError($"Failed to update field: {fieldName}");
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to update {fieldName}: {ex.Message}", ex);
+            //_logger.LogError($"An unexpected error occurred: {ex.Message}");
+            throw new Exception("An unexpected error occurred while updating the field.", ex);
         }
     }
+
+    //public async Task UpdateFieldAsync(Guid personId, string fieldName, string fieldValue, Guid userId)
+    //{
+    //    if (string.IsNullOrWhiteSpace(fieldValue))
+    //        throw new ArgumentException($"{fieldName} cannot be empty.");
+
+    //    var person = await _personRepository.GetByIdAsync(personId);
+    //    if (person == null) throw new Exception("Person not found.");
+    //    if (person.UserId != userId)
+    //        throw new UnauthorizedAccessException("You do not have permission to update this field.");
+
+    //    try
+    //    {
+    //        switch (fieldName)
+    //        {
+    //            case "Vardas": person.Vardas = fieldValue; break;
+    //            case "Pavarde": person.Pavarde = fieldValue; break;
+    //            case "AsmensKodas": person.AsmensKodas = fieldValue; break;
+    //            case "TelefonoNumeris": person.TelefonoNumeris = fieldValue; break;
+    //            case "ElPastas": person.ElPastas = fieldValue; break;
+
+    //            case "ProfilioNuotrauka":
+    //                // Use the same logic as in CreatePersonAsync
+    //                person.ProfilioNuotrauka = Convert.FromBase64String(
+    //                    ProcessProfilePhoto(fieldValue)
+    //                );
+    //                break;
+
+    //            default:
+    //                throw new ArgumentException("Invalid field name.");
+    //        }
+
+    //        await _personRepository.UpdateAsync(person);
+    //    }
+    //    catch (FormatException)
+    //    {
+    //        throw new ArgumentException("Invalid profile picture format. Ensure the image is Base64-encoded.");
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw new Exception($"Failed to update {fieldName}: {ex.Message}", ex);
+    //    }
+    //}
 
     public async Task UpdateAddressFieldAsync(Guid personId, string fieldName, string fieldValue, Guid userId)
     {

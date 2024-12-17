@@ -6,6 +6,7 @@ using RegistravimoSistema.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Reflection;
 
 namespace RegistravimoSistema
 {
@@ -68,7 +69,7 @@ namespace RegistravimoSistema
             // Controllers and JSON Serialization
             builder.Services.AddControllers();
 
-            // Swagger
+            // Swagger Configuration
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -79,6 +80,7 @@ namespace RegistravimoSistema
                     Description = "An API for user and person management."
                 });
 
+                // JWT Bearer authentication
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer <token>'",
@@ -103,6 +105,11 @@ namespace RegistravimoSistema
                         new string[] {}
                     }
                 });
+
+                // Include XML documentation file
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
 
             // Build the application
