@@ -44,11 +44,11 @@ public class PersonService : IPersonService
         // Ensure the profile picture is valid and resize it
         request.ProfilioNuotrauka = ProcessProfilePhoto(request.ProfilioNuotrauka);
 
-        // Map the Person and Address entities from the request
+        // Map
         var person = _mapper.MapFromDto(request, userId);
         var address = _mapper.MapAddressFromDto(request, person.Id);
 
-        // Save the Person and Address entities to the database
+        // Save to DB
         await _personRepository.AddAsync(person);
         await _addressRepository.AddAsync(address);
     }
@@ -77,12 +77,10 @@ public class PersonService : IPersonService
                     break;
 
                 case "ProfilioNuotrauka":
-                    // Process and save the profile picture
                     var processedImage = ProcessProfilePhoto(fieldValue);
                     person.ProfilioNuotrauka = Convert.FromBase64String(processedImage);
                     break;
 
-                // Delegate address fields to UpdateAddressFieldAsync
                 case "Miestas":
                 case "Gatve":
                 case "NamoNumeris":

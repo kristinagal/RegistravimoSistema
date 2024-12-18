@@ -136,6 +136,10 @@ namespace RegistravimoSistema.Controllers
             }
         }
 
+        /// <summary>
+        /// Grąžina prisijungusio asmens profilį.
+        /// </summary>
+        /// <returns>200 OK su asmens duomenimis.</returns>
         [HttpGet("MyProfile")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
