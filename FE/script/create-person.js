@@ -1,14 +1,12 @@
-restrictAccess(["Admin", "User"]); 
+restrictAccess(["Admin", "User"]);
 
 document.getElementById("create-person-btn")?.addEventListener("click", async () => {
-    // Patikrinkite, ar egzistuoja jwt token
     if (!token) {
         showGeneralError("Jūs nesate prisijungę. Prisijunkite norėdami tęsti.");
         return;
     }
 
-    // Gauti failo įvestį ir konvertuoti į Base64
-    const fileInput = document.getElementById("profile-picture");
+    const fileInput = document.getElementById("create-profilioNuotrauka");
     let profilePicture = null;
 
     try {
@@ -16,8 +14,7 @@ document.getElementById("create-person-btn")?.addEventListener("click", async ()
             profilePicture = await getBase64(fileInput.files[0]);
         }
     } catch (error) {
-        console.error("Klaida konvertuojant failą į Base64:", error);
-        showGeneralError("Nepavyko apdoroti profilio nuotraukos. Bandykite dar kartą.");
+        showGeneralError("Nepavyko apdoroti profilio nuotraukos.");
         return;
     }
 
@@ -26,26 +23,18 @@ document.getElementById("create-person-btn")?.addEventListener("click", async ()
     const data = {
         vardas: getValue("create-vardas"),
         pavarde: getValue("create-pavarde"),
-        asmensKodas: getValue("create-asmens-kodas"),
-        telefonoNumeris: getValue("create-telefono-numeris"),
-        elPastas: getValue("create-el-pastas"),
+        asmensKodas: getValue("create-asmensKodas"),
+        telefonoNumeris: getValue("create-telefonoNumeris"),
+        elPastas: getValue("create-elPastas"),
         miestas: getValue("create-miestas"),
         gatve: getValue("create-gatve"),
-        namoNumeris: getValue("create-namo-numeris"),
-        butoNumeris: getValue("create-buto-numeris"),
+        namoNumeris: getValue("create-namoNumeris"),
+        butoNumeris: getValue("create-butoNumeris"),
         profilioNuotrauka: profilePicture,
     };
 
-    console.log(data);
+    clearAllErrors();
 
-    // Privalomų laukų patikrinimas
-    if (!data.vardas || !data.pavarde || !data.asmensKodas || !data.elPastas || !profilePicture) {
-        showGeneralError("Visi laukai, įskaitant profilio nuotrauką, yra privalomi.");
-        return;
-    }
-    console.log(data);
-    
-    // Siųsti duomenis į API
     try {
         const response = await fetch(`${baseUrl}/Person`, {
             method: "POST",
@@ -62,51 +51,30 @@ document.getElementById("create-person-btn")?.addEventListener("click", async ()
             clearAllErrors();
         } else {
             const result = await response.json();
-            console.error("API klaida:", result);
             if (result.errors) showValidationErrors(result.errors);
             else showGeneralError(result.message || "Nepavyko sukurti asmens.");
         }
     } catch (error) {
-        console.error("Klaida kuriant asmenį:", error);
         showGeneralError("Įvyko netikėta klaida. Bandykite dar kartą vėliau.");
     }
 });
 
-// Pagalbinė funkcija konvertuoti failą į Base64
-async function getBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]); // Pašalina metaduomenis
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-    });
-}
-
-// Funkcijos klaidoms rodyti (naudojamos, kai reikia)
+// Show validation errors
 function showValidationErrors(errors) {
     clearAllErrors();
     for (const field in errors) {
-        const input = document.getElementById(`create-${field}`);
+        const inputId = `create-${toCamelCase(field)}`;
+        const input = document.getElementById(inputId);
+
         if (input) {
-            const errorMsg = document.createElement("div");
-            errorMsg.className = "error-message";
-            errorMsg.textContent = errors[field];
-            errorMsg.style.color = "red";
-            input.insertAdjacentElement("afterend", errorMsg);
+            errors[field].forEach((error) => {
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "error-message";
+                errorMsg.textContent = error;
+                input.insertAdjacentElement("afterend", errorMsg);
+            });
+        } else {
+            console.warn(`No input field found for ${field}`);
         }
-    }
-}
-
-function clearAllErrors() {
-    document.querySelectorAll(".error-message").forEach((el) => el.remove());
-}
-
-function showGeneralError(message) {
-    const errorContainer = document.getElementById("general-error");
-    if (errorContainer) {
-        errorContainer.textContent = message;
-        errorContainer.style.color = "red";
-    } else {
-        alert(message); // Atsarginis variantas, jei konteinerio nėra
     }
 }

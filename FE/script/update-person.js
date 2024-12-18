@@ -1,23 +1,10 @@
-restrictAccess(["Admin", "User"]); // Restrict access to Admin and User roles
+let personId = null; //  current user's ID
+let initialValues = {}; // initial field values 
 
-let initialValues = {}; // Store initial values for comparison
-
-// Fetch and populate person details
-document.getElementById("fetch-person-btn")?.addEventListener("click", async () => {
-    const personIdInput = document.getElementById("update-id");
-    const personId = personIdInput.value.trim();
-    const generalError = document.getElementById("general-error");
-
-    clearError(personIdInput);
-    generalError.textContent = "";
-
-    if (!personId) {
-        showError(personIdInput, "Prašome įvesti galiojantį asmens ID.");
-        return;
-    }
+document.addEventListener("DOMContentLoaded", async () => {
 
     try {
-        const response = await fetch(`${baseUrl}/Person/${personId}`, {
+        const response = await fetch(`${baseUrl}/Person/MyProfile`, {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -25,31 +12,27 @@ document.getElementById("fetch-person-btn")?.addEventListener("click", async () 
         if (!response.ok) {
             switch (response.status) {
                 case 401:
-                    showError(personIdInput, "Esate neprisijungęs. Prisijunkite iš naujo.");
+                    showGeneralError("Esate neprisijungęs. Prisijunkite iš naujo.");
                     break;
                 case 403:
-                    showError(personIdInput, "Neturite teisių peržiūrėti šį asmenį.");
-                    break;
-                case 404:
-                    showError(personIdInput, "Asmuo su tokiu ID nerastas.");
+                    showGeneralError("Neturite teisės peržiūrėti šio profilio.");
                     break;
                 default:
-                    showError(personIdInput, "Įvyko klaida gaunant asmens duomenis.");
+                    showGeneralError("Įvyko klaida gaunant jūsų profilio duomenis.");
             }
             return;
         }
 
         const person = await response.json();
+        personId = person.id; // current user's ID
         populatePersonFields(person);
-
-        document.getElementById("update-form").classList.remove("hidden");
     } catch (error) {
-        console.error("Klaida:", error);
-        showError(personIdInput, "Įvyko serverio klaida. Bandykite vėliau.");
+        console.error("Klaida gaunant profilį:", error);
+        showGeneralError("Įvyko serverio klaida. Bandykite vėliau.");
     }
 });
 
-// Populate form fields with fetched person data
+
 function populatePersonFields(person) {
     document.getElementById("update-vardas").value = person.vardas || "";
     document.getElementById("update-pavarde").value = person.pavarde || "";
@@ -62,6 +45,11 @@ function populatePersonFields(person) {
         document.getElementById("update-gatve").value = person.address.gatve || "";
         document.getElementById("update-namo-numeris").value = person.address.namoNumeris || "";
         document.getElementById("update-buto-numeris").value = person.address.butoNumeris || "";
+    } else {
+        document.getElementById("update-miestas").value = "";
+        document.getElementById("update-gatve").value = "";
+        document.getElementById("update-namo-numeris").value = "";
+        document.getElementById("update-buto-numeris").value = "";
     }
 
     displayProfilePicture(person.profilioNuotrauka, "update-profile-preview");
@@ -79,57 +67,11 @@ function populatePersonFields(person) {
     };
 }
 
-// Update a single field
-async function updateField(personId, endpoint, fieldName, value, inputElement) {
-    try {
-        const payload = { [fieldName]: value };
-
-        const response = await fetch(`${baseUrl}/Person/${personId}/${endpoint}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            const result = await response.json();
-            switch (response.status) {
-                case 401:
-                    showError(inputElement, "Esate neprisijungęs. Prisijunkite iš naujo.");
-                    break;
-                case 403:
-                    showError(inputElement, "Neturite teisės atnaujinti šio lauko.");
-                    break;
-                case 404:
-                    showError(inputElement, "Asmuo nerastas.");
-                    break;
-                case 400:
-                    showError(inputElement, result.message || `Neteisingi duomenys laukui ${fieldName}.`);
-                    break;
-                default:
-                    showError(inputElement, "Įvyko netikėta klaida.");
-            }
-            return false;
-        }
-
-        clearError(inputElement);
-        return true;
-    } catch (error) {
-        console.error(`Klaida atnaujinant ${fieldName}:`, error);
-        showError(inputElement, `Įvyko klaida atnaujinant lauką ${fieldName}.`);
-        return false;
-    }
-}
-
-// Save all updates
 document.getElementById("save-updates-btn")?.addEventListener("click", async () => {
-    const personId = document.getElementById("update-id").value.trim();
+    clearAllErrors();
 
     if (!personId) {
-        const personIdInput = document.getElementById("update-id");
-        showError(personIdInput, "Asmens ID yra privalomas.");
+        showGeneralError("Nepavyko nustatyti naudotojo ID. Atnaujinkite puslapį.");
         return;
     }
 
@@ -145,11 +87,13 @@ document.getElementById("save-updates-btn")?.addEventListener("click", async () 
         { id: "update-buto-numeris", field: "ButoNumeris", endpoint: "UpdateButoNumeris" },
     ];
 
+    let changesMade = false;
     let success = true;
 
     for (const { id, field, endpoint } of fields) {
         const input = document.getElementById(id);
         if (input.value !== initialValues[field]) {
+            changesMade = true;
             const updated = await updateField(personId, endpoint, field, input.value, input);
             if (!updated) success = false;
         }
@@ -157,15 +101,21 @@ document.getElementById("save-updates-btn")?.addEventListener("click", async () 
 
     const fileInput = document.getElementById("update-profile-picture");
     if (fileInput.files.length > 0) {
+        changesMade = true;
         try {
             const profilePicture = await getBase64(fileInput.files[0]);
             const updated = await updateField(personId, "UpdateProfilioNuotrauka", "ProfilioNuotrauka", profilePicture, fileInput);
             if (!updated) success = false;
         } catch (error) {
             console.error("Klaida apdorojant nuotrauką:", error);
-            showGeneralError("Nepavyko apdoroti nuotraukos.");
+            showGeneralError("Nepavyko apdoroti profilio nuotraukos.");
             success = false;
         }
+    }
+
+    if (!changesMade) {
+        showGeneralError("Nėra jokių pakeitimų, kuriuos būtų galima išsaugoti.");
+        return;
     }
 
     if (success) {
@@ -175,43 +125,49 @@ document.getElementById("save-updates-btn")?.addEventListener("click", async () 
     }
 });
 
-// Display profile picture
-function displayProfilePicture(base64Image, imageElementId) {
-    const profilePreview = document.getElementById(imageElementId);
-    if (base64Image) {
-        profilePreview.src = `data:image/png;base64,${base64Image}`;
-        profilePreview.classList.remove("hidden");
-    } else {
-        profilePreview.src = "";
-        profilePreview.classList.add("hidden");
+
+async function updateField(personId, endpoint, fieldName, value, inputElement) {
+    try {
+        const payload = { [fieldName]: value };
+        const response = await fetch(`${baseUrl}/Person/${personId}/${endpoint}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const result = await response.json();
+            if (result.errors?.[fieldName]) {
+                displayFieldError(inputElement, result.errors[fieldName]);
+            } else {
+                console.error(`Klaida atnaujinant ${fieldName}:`, result);
+            }
+            return false;
+        }
+
+        clearFieldError(inputElement);
+        return true;
+    } catch (error) {
+        console.error(`Klaida atnaujinant ${fieldName}:`, error);
+        return false;
     }
 }
 
-// Error handling
-function showError(inputElement, message) {
-    clearError(inputElement);
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "error-message";
-    errorDiv.textContent = message;
-    inputElement.insertAdjacentElement("afterend", errorDiv);
-}
+function displayFieldError(inputElement, errorMessages) {
+    clearFieldError(inputElement);
 
-function clearError(inputElement) {
-    inputElement.parentNode.querySelectorAll(".error-message").forEach((el) => el.remove());
-}
+    const errorContainer = document.createElement("div");
+    errorContainer.className = "error-message";
 
-function showGeneralError(message) {
-    const generalError = document.getElementById("general-error");
-    generalError.textContent = message;
-    generalError.classList.add("error-message");
-}
-
-// Convert file to Base64
-async function getBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
+    errorMessages.forEach((message) => {
+        const errorLine = document.createElement("div");
+        errorLine.textContent = message;
+        errorContainer.appendChild(errorLine);
     });
+
+    inputElement.insertAdjacentElement("afterend", errorContainer);
 }
+

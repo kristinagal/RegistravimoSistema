@@ -3,31 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sukurkite asmens profilį</title>
+    <title>Sukurkite savo profilį</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>Sukurkite asmens profilį</h1>
+        <h1>Sukurkite savo profilį</h1>
         <div id="menu"></div>
     </header>
+
     <main>
-        <section id="person-section">
-            <input type="text" id="create-vardas" placeholder="Vardas">
-            <input type="text" id="create-pavarde" placeholder="Pavarde">
-            <input type="text" id="create-asmens-kodas" placeholder="Asmens Kodas">
-            <input type="text" id="create-telefono-numeris" placeholder="Telefono Numeris">
-            <input type="email" id="create-el-pastas" placeholder="El. Paštas">
-            <input type="text" id="create-miestas" placeholder="Miestas">
-            <input type="text" id="create-gatve" placeholder="Gatvė">
-            <input type="text" id="create-namo-numeris" placeholder="Namo Numeris">
-            <input type="text" id="create-buto-numeris" placeholder="Buto Numeris">
-            <label for="profile-picture">Profilio nuotrauka:</label>
-            <input type="file" id="profile-picture" accept="image/*">
-            <button id="create-person-btn">Išsaugoti</button>
-            <p id="person-message"></p>
+        <section id="create-section">
+            <!-- Create Form -->
+            <div id="create-form">
+                <h2>Įveskite savo informaciją</h2>
+
+                <label for="create-vardas">Vardas:</label>
+                <input type="text" id="create-vardas" placeholder="Vardas">
+
+                <label for="create-pavarde">Pavardė:</label>
+                <input type="text" id="create-pavarde" placeholder="Pavardė">
+
+                <label for="create-asmensKodas">Asmens Kodas:</label>
+                <input type="text" id="create-asmensKodas" placeholder="Asmens Kodas">
+
+                <label for="create-telefonoNumeris">Telefono Numeris:</label>
+                <input type="text" id="create-telefonoNumeris" placeholder="Telefono Numeris">
+
+                <label for="create-elPastas">El. Paštas:</label>
+                <input type="email" id="create-elPastas" placeholder="El. Paštas">
+
+                <label for="create-miestas">Miestas:</label>
+                <input type="text" id="create-miestas" placeholder="Miestas">
+
+                <label for="create-gatve">Gatvė:</label>
+                <input type="text" id="create-gatve" placeholder="Gatvė">
+
+                <label for="create-namoNumeris">Namo Numeris:</label>
+                <input type="text" id="create-namoNumeris" placeholder="Namo Numeris">
+
+                <label for="create-butoNumeris">Buto Numeris:</label>
+                <input type="text" id="create-butoNumeris" placeholder="Buto Numeris">
+
+                <label for="create-profilioNuotrauka">Profilio nuotrauka:</label>
+                <input type="file" id="create-profilioNuotrauka" accept="image/*">
+
+
+                <!-- Create Button -->
+                <button id="create-person-btn">Sukurti</button>
+                <p id="general-error" class="error-message"></p>
+            </div>
         </section>
     </main>
+
     <script src="script/common.js"></script>
     <script src="script/create-person.js"></script>
 </body>

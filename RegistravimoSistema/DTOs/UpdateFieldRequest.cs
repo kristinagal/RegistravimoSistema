@@ -8,7 +8,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Vardas
         /// </summary>
-        [Required, TextLengthValidator(2, 50)]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TextLengthValidator(2, 50)]
         public string Vardas { get; set; } = string.Empty;
     }
 
@@ -17,7 +17,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Pavardė
         /// </summary>
-        [Required, TextLengthValidator(2, 50)]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TextLengthValidator(2, 50)]
         public string Pavarde { get; set; } = string.Empty;
     }
 
@@ -26,7 +26,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Asmens kodas
         /// </summary>
-        [Required, AsmensKodasValidator]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), AsmensKodasValidator]
         public string AsmensKodas { get; set; } = string.Empty;
     }
 
@@ -35,7 +35,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Telefono numeris
         /// </summary>
-        [Required, TelefonoNumerisValidator]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TelefonoNumerisValidator]
         public string TelefonoNumeris { get; set; } = string.Empty;
     }
 
@@ -44,7 +44,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Elektroninis paštas
         /// </summary>
-        [Required, EmailValidator]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), EmailValidator]
         public string ElPastas { get; set; } = string.Empty;
     }
 
@@ -53,7 +53,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Profilio nuotrauka
         /// </summary>
-        [Required]
+        [Required(ErrorMessage = "Šis laukas yra privalomas.")]
         public string ProfilioNuotrauka { get; set; } = string.Empty; // Base64 encoded string
     }
 
@@ -62,7 +62,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Miestas
         /// </summary>
-        [Required, TextLengthValidator(1, 100)]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TextLengthValidator(1, 100)]
         public string Miestas { get; set; } = string.Empty;
     }
 
@@ -71,7 +71,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Gatvė
         /// </summary>
-        [Required, TextLengthValidator(1, 100)]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TextLengthValidator(1, 100)]
         public string Gatve { get; set; } = string.Empty;
     }
 
@@ -80,7 +80,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Namo numeris
         /// </summary>
-        [Required, TextLengthValidator(1, 10)]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TextLengthValidator(1, 10)]
         public string NamoNumeris { get; set; } = string.Empty;
     }
 
@@ -89,7 +89,7 @@ namespace RegistravimoSistema.DTOs
         /// <summary>
         /// Buto numeris
         /// </summary>
-        [TextLengthValidator(1, 10)]
+        [Required(ErrorMessage = "Šis laukas yra privalomas."), TextLengthValidator(1, 10)]
         public string ButoNumeris { get; set; } = string.Empty;
     }
 }

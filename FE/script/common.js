@@ -2,7 +2,7 @@ const baseUrl = "https://localhost:7094/api";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 
-// Helper: Render Menu
+
 function renderMenu() {
     const menuContainer = document.getElementById("menu");
     if (menuContainer) {
@@ -27,12 +27,12 @@ function renderMenu() {
     }
 }
 
-// Helper: Convert Image to Base64
+// Convert Image to Base64
 async function getBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
-            const base64Data = reader.result.split(",")[1]; // Remove data URL prefix
+            const base64Data = reader.result.split(",")[1]; 
             resolve(base64Data);
         };
         reader.onerror = (error) => reject(error);
@@ -58,7 +58,6 @@ function displayProfilePicture(base64Image, imageElementId) {
     }
 }
 
-// Shared: Access Restriction
 function restrictAccess(allowedRoles = []) {
     if (!token) {
         alert("Norėdami tęsti prisijunkite.");
@@ -80,3 +79,31 @@ function restrictAccess(allowedRoles = []) {
 
 // Render menu on page load
 document.addEventListener("DOMContentLoaded", renderMenu);
+
+
+function showGeneralError(message) {
+    const errorContainer = document.getElementById("general-error");
+    if (errorContainer) {
+        errorContainer.textContent = message;
+        errorContainer.style.color = "red";
+    } else {
+        alert(message);
+    }
+}
+
+// Convert API fields (PascalCase) to camelCase to match input IDs
+function toCamelCase(str) {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+
+function clearAllErrors() {
+    document.querySelectorAll(".error-message").forEach((el) => el.remove());
+}
+
+function clearFieldError(inputElement) {
+    const existingError = inputElement.nextElementSibling;
+    if (existingError && existingError.classList.contains("error-message")) {
+        existingError.remove();
+    }
+}

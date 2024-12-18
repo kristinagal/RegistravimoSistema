@@ -31,7 +31,9 @@ namespace RegistravimoSistema.Repositories
 
         public async Task<Person?> GetByIdAsync(Guid id)
         {
-            return await _context.Persons.Include(p => p.Address).FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.Persons
+                .Include(p => p.Address)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task UpdateAsync(Person person)
@@ -45,6 +47,7 @@ namespace RegistravimoSistema.Repositories
         public async Task<Person?> GetByUserIdAsync(Guid userId)
         {
             return await _context.Persons
+                .Include(p => p.Address)
                 .FirstOrDefaultAsync(p => p.UserId == userId);
         }
 

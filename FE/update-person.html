@@ -8,24 +8,15 @@
 </head>
 <body>
     <header>
-        <h1>Atnaujinkite asmens profilį</h1>
+        <h1>Atnaujinkite savo profilį</h1>
         <div id="menu"></div>
     </header>
 
     <main>
         <section id="update-section">
-            <!-- Fetch Person ID -->
-            <div>
-                <label for="update-id">Įveskite asmens ID:</label>
-                <input type="text" id="update-id" placeholder="Person ID">
-                <div id="general-error" style="color: red; margin-top: 5px;"></div>
-            </div>
-
-            <button id="fetch-person-btn">Rasti</button>
-
             <!-- Update Form -->
-            <div id="update-form" class="hidden">
-                <h2>Atnaujinkite asmens informaciją</h2>
+            <div id="update-form">
+                <h2>Atnaujinkite savo informaciją</h2>
 
                 <!-- Vardas -->
                 <label for="update-vardas">Vardas:</label>
@@ -33,7 +24,7 @@
 
                 <!-- Pavarde -->
                 <label for="update-pavarde">Pavardė:</label>
-                <input type="text" id="update-pavarde" placeholder="Pavarde">
+                <input type="text" id="update-pavarde" placeholder="Pavardė">
 
                 <!-- Asmens Kodas -->
                 <label for="update-asmens-kodas">Asmens kodas:</label>
@@ -63,14 +54,14 @@
                 <!-- Nuotrauka -->
                 <label for="update-profile-picture">Profilio nuotrauka:</label>
                 <input type="file" id="update-profile-picture" accept="image/*">
-                
+
                 <div class="image-container">
-                    <img id="update-profile-preview" class="profile-picture hidden" alt="Profile Picture">
+                    <img id="update-profile-preview" class="profile-preview hidden" alt="Profile Picture">
                 </div>
-          
+                
                 <!-- Save Updates -->
                 <button id="save-updates-btn">Saugoti</button>
-                <p id="update-message" style="color: red;"></p>
+                <div id="general-error" style="color: red; margin-top: 5px;"></div>
             </div>
         </section>
     </main>

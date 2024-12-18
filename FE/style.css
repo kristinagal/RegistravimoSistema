@@ -1,18 +1,19 @@
 /* General Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f9;
+    background-color: #fdf2f5; /* Very light pink background */
     color: #333;
 }
 
 header {
-    background-color: #0073e6;
+    background-color: #f8a3b8; /* Light pink */
     color: white;
     padding: 20px;
     text-align: center;
     font-size: 1.5em;
+    font-family: 'Georgia', serif;
 }
 
 main {
@@ -22,24 +23,25 @@ main {
 h1, h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: #333;
+    color: #b54d6c; /* Soft pinkish purple for headings */
+    font-family: 'Georgia', serif;
 }
 
 section {
     margin: 20px auto;
     padding: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #f6c3d2; /* Light pink border */
     background: white;
     border-radius: 8px;
-    max-width: 600px; /* Restrict form width */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add slight shadow for depth */
+    max-width: 600px;
+    box-shadow: 0 4px 8px rgba(200, 90, 120, 0.2); /* Light pink shadow */
 }
 
 label {
     display: block;
     margin: 10px 0 5px;
     font-weight: bold;
-    color: #555;
+    color: #b54d6c; /* Soft pink-purple */
     text-align: left;
     max-width: 400px;
     margin-left: auto;
@@ -52,33 +54,34 @@ input, textarea {
     padding: 10px;
     width: 100%;
     max-width: 400px;
-    border: 1px solid #ccc;
+    border: 1px solid #f8b5c5; /* Light pink border */
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 1em;
 }
 
 input:focus, textarea:focus {
-    border-color: #0073e6;
+    border-color: #f48fb1; /* Softer pink focus */
     outline: none;
-    box-shadow: 0 0 5px rgba(0, 115, 230, 0.3);
+    box-shadow: 0 0 5px rgba(248, 131, 177, 0.5); /* Light pink glow */
 }
 
 button {
     display: block;
     margin: 20px auto;
     padding: 10px 20px;
-    background-color: #0073e6;
+    background-color: #f48fb1; /* Light pink */
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 button:hover {
-    background-color: #005bb5;
+    background-color: #f06292; /* Slightly darker pink */
+    transform: scale(1.05);
 }
 
 table {
@@ -89,18 +92,18 @@ table {
 
 table th, table td {
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #f9d4e0; /* Pale pink border */
     text-align: left;
 }
 
 table th {
-    background-color: #f4f4f9;
+    background-color: #fcebef; /* Pale pink header */
     font-weight: bold;
 }
 
 /* Error Message Styling */
 .error-message {
-    color: red;
+    color: #d84315; /* Light red for errors */
     font-size: 0.9em;
     margin-top: 5px;
     margin-left: auto;
@@ -109,21 +112,11 @@ table th {
     max-width: 400px;
 }
 
-/* Preformatted Text (For Debugging or Raw Data) */
-pre {
-    background: #f4f4f4;
-    padding: 10px;
-    border-radius: 5px;
-    overflow-x: auto;
-    font-size: 0.9em;
-    margin-top: 10px;
-}
-
 /* Navigation Menu */
 #menu {
     display: flex;
     justify-content: center;
-    background-color: #0073e6;
+    background-color: #f8a3b8; /* Light pink */
     padding: 10px 0;
 }
 
@@ -138,32 +131,29 @@ pre {
 }
 
 #menu button:hover {
-    color: #ddd;
+    color: #fcebef; /* Softer light pink */
 }
 
 /* Profile Picture Styles */
 .profile-preview {
     display: block;
-    margin: 10px auto; /* Center horizontally */
-    max-width: 150px; /* Set consistent size */
-    height: auto; /* Maintain aspect ratio */
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin: 10px auto;
+    max-width: 150px;
+    height: auto;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(200, 90, 120, 0.3);
 }
 
 .hidden {
-    display: none; /* Completely hide the element */
-}
-
-/* Image Container for Centering */
-.image-container {
-    text-align: center; /* Center inline elements like images */
+    display: none;
 }
 
 /* General Error Styling */
 .general-error {
-    color: red;
+    color: #d84315;
     margin-top: 5px;
+    text-align: center;
+    font-size: 0.9em;
 }
 
 /* Media Queries for Responsive Design */
@@ -180,4 +170,15 @@ pre {
     button {
         width: 100%;
     }
+}
+
+a {
+    text-decoration: none;
+}
+
+a button {
+    text-decoration: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
 }

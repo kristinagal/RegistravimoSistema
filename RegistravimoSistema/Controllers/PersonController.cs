@@ -136,6 +136,46 @@ namespace RegistravimoSistema.Controllers
             }
         }
 
+        [HttpGet("MyProfile")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var person = await _personService.GetPersonByUserIdAsync(userId);
+
+                if (person == null)
+                    return NotFound("Profile not found.");
+
+                return Ok(new PersonResponse
+                {
+                    Id = person.Id,
+                    Vardas = person.Vardas,
+                    Pavarde = person.Pavarde,
+                    AsmensKodas = person.AsmensKodas,
+                    TelefonoNumeris = person.TelefonoNumeris,
+                    ElPastas = person.ElPastas,
+                    ProfilioNuotrauka = person.ProfilioNuotrauka != null
+                        ? Convert.ToBase64String(person.ProfilioNuotrauka)
+                        : null,
+                    Address = new AddressResponse
+                    {
+                        Miestas = person.Address.Miestas,
+                        Gatve = person.Address.Gatve,
+                        NamoNumeris = person.Address.NamoNumeris,
+                        ButoNumeris = person.Address.ButoNumeris
+                    }
+                });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
         #region Update Individual Fields
 
         /// <summary>
